@@ -1,6 +1,7 @@
 package com.example.mybudget.di
 
 import androidx.room.Room
+import com.example.mybudget.AddExpenseViewModel
 import com.example.mybudget.data.local.ExpenseDatabase
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.repository.BudgetRepositoryImpl
@@ -24,4 +25,5 @@ val appModule =
         single<BudgetRepository> { BudgetRepositoryImpl(get()) }
 
         viewModel { BudgetViewModel(get()) }
+        viewModel { AddExpenseViewModel(get()) }
     }
