@@ -23,7 +23,6 @@ import com.example.mybudget.AddExpenseViewModel
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpenseType
 import com.example.mybudget.ui.model.AddExpenseEvent
-import com.example.mybudget.ui.model.UiEvent
 
 @Composable
 fun AddExpenseScreen(viewModel: AddExpenseViewModel) {
@@ -37,8 +36,12 @@ fun AddExpenseScreen(viewModel: AddExpenseViewModel) {
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
-                is UiEvent.ShowToast -> {
+                is AddExpenseEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is AddExpenseEvent.AddExpense -> {
+                    // Handled by the VM
                 }
             }
         }

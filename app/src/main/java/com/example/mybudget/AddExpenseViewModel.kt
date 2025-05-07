@@ -5,14 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.ui.model.AddExpenseEvent
-import com.example.mybudget.ui.model.UiEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    private val _uiEvent = MutableSharedFlow<AddExpenseEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
     fun onEvent(event: AddExpenseEvent) {
@@ -27,8 +26,12 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
                 repository.addExpense(expense)
             } else {
                 viewModelScope.launch {
-                    _uiEvent.emit(UiEvent.ShowToast("Please enter valid name and amount."))
+                    _uiEvent.emit(AddExpenseEvent.ShowToast("Please enter valid name and amount."))
                 }
+            }
+
+            is AddExpenseEvent.ShowToast -> {
+                // Handled by the screen
             }
         }
     }
