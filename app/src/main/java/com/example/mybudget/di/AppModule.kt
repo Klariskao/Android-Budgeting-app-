@@ -9,4 +9,5 @@ import org.koin.dsl.module
 val appModule =
     module {
         single<BudgetRepository> { BudgetRepositoryImpl() }
+        viewModel { BudgetViewModel(get()) }
     }
