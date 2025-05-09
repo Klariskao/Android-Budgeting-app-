@@ -11,5 +11,7 @@ sealed class AddExpenseEvent {
         val frequency: ExpenseFrequency
     ) : AddExpenseEvent()
 
+    data object ExpenseAdded : AddExpenseEvent()
+
     data class ShowToast(val message: String) : AddExpenseEvent()
 }

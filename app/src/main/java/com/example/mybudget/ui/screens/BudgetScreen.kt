@@ -8,8 +8,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,10 +28,10 @@ fun BudgetScreen(
     viewModel: BudgetViewModel,
     navController: NavController
 ) {
-    val budget by viewModel.budget.observeAsState()
+    val budget by viewModel.budget.collectAsState()
 
     Column(modifier = Modifier.padding(16.dp)) {
-        val monthlyIncome = budget?.incomes.orEmpty().filter {
+        val monthlyIncome = budget.incomes.filter {
             it.type == IncomeType.MONTHLY
         }.sumOf { it.amount }
         // Display Monthly Income
@@ -45,7 +45,7 @@ fun BudgetScreen(
 
         // Display Expenses
         LazyColumn {
-            items(budget?.expenses.orEmpty()) { expense ->
+            items(budget.expenses) { expense ->
                 ExpenseItem(expense = expense)
             }
         }

@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.StateFlow
 interface BudgetRepository {
     val budgetData: StateFlow<Budget>
 
-    fun getBudget(): Budget
-    fun saveBudget(budget: Budget)
-    fun addExpense(expense: Expense)
-    fun removeExpense(expense: Expense)
-    fun loadBudgetFromDatabase()
-    fun saveBudgetToDatabase(budget: Budget)
-    fun addIncome(income: Income)
-    fun removeIncome(income: Income)
+    suspend fun getBudget(): Budget
+    suspend fun saveBudget(budget: Budget)
+    suspend fun addExpense(expense: Expense)
+    suspend fun removeExpense(expense: Expense)
+    suspend fun loadBudgetFromDatabase()
+    suspend fun saveBudgetToDatabase(budget: Budget)
+    suspend fun addIncome(income: Income)
+    suspend fun removeIncome(income: Income)
 }

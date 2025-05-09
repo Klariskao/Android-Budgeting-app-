@@ -20,6 +20,12 @@ class AddIncomeViewModel(
     private val _uiEvent = MutableSharedFlow<AddIncomeEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
+    init {
+        viewModelScope.launch {
+            repository.loadBudgetFromDatabase()
+        }
+    }
+
     fun onEvent(event: AddIncomeEvent) {
         when (event) {
             is AddIncomeEvent.AddIncome -> {
@@ -30,20 +36,21 @@ class AddIncomeViewModel(
                         _uiEvent.emit(AddIncomeEvent.ShowToast("Enter valid income info"))
                     }
                 } else {
-                    repository.addIncome(
-                        Income(
-                            name = name,
-                            amount = amount,
-                            type = event.type
-                        )
-                    )
                     viewModelScope.launch {
+                        repository.addIncome(
+                            Income(
+                                name = name,
+                                amount = amount,
+                                type = event.type
+                            )
+                        )
                         _uiEvent.emit(AddIncomeEvent.ShowToast("Income added"))
+                        _uiEvent.emit(AddIncomeEvent.IncomeAdded)
                     }
                 }
             }
 
-            is AddIncomeEvent.ShowToast -> {
+            is AddIncomeEvent.ShowToast, AddIncomeEvent.IncomeAdded -> {
                 // Handled by the screen
             }
         }

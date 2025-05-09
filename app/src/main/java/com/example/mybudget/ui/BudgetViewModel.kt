@@ -1,41 +1,34 @@
 package com.example.mybudget.ui
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mybudget.data.model.Budget
-import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.ExpenseFrequency
-import com.example.mybudget.data.model.Income
 import com.example.mybudget.data.model.IncomeType
 import com.example.mybudget.repository.BudgetRepository
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
 
-    private val _budget = MutableLiveData(Budget())
-    val budget: LiveData<Budget> get() = _budget
+    val budget: StateFlow<Budget> = repository.budgetData
 
-    fun updateIncome(income: Income) {
-        _budget.value = _budget.value?.copy(incomes = _budget.value?.incomes.orEmpty() + income)
-    }
-
-    fun addExpense(expense: Expense) {
-        _budget.value = _budget.value?.copy(expenses = _budget.value?.expenses.orEmpty() + expense)
-    }
-
-    fun removeExpense(expense: Expense) {
-        _budget.value = _budget.value?.copy(expenses = _budget.value?.expenses.orEmpty() - expense)
+    init {
+        viewModelScope.launch {
+            repository.loadBudgetFromDatabase()
+        }
     }
 
     fun calculateAvailableFunds(): Double {
-        val totalMonthlyExpenses =
-            _budget.value?.expenses?.filter {
-                it.frequency == ExpenseFrequency.MONTHLY
-            }?.sumOf { it.amount } ?: 0.0
-        val totalMonthlyIncome =
-            _budget.value?.incomes?.filter {
-                it.type == IncomeType.MONTHLY
-            }?.sumOf { it.amount } ?: 0.0
+        val currentBudget = budget.value
+        val totalMonthlyIncome = currentBudget.incomes
+            .filter { it.type == IncomeType.MONTHLY }
+            .sumOf { it.amount }
+
+        val totalMonthlyExpenses = currentBudget.expenses
+            .filter { it.frequency == ExpenseFrequency.MONTHLY }
+            .sumOf { it.amount }
+
         return totalMonthlyIncome - totalMonthlyExpenses
     }
 }

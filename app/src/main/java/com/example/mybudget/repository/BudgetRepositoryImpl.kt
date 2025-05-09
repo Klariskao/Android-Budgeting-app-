@@ -26,37 +26,37 @@ class BudgetRepositoryImpl(
     )
     override val budgetData: StateFlow<Budget> = _budgetData.asStateFlow()
 
-    override fun getBudget(): Budget = _budgetData.value
+    override suspend fun getBudget(): Budget = _budgetData.value
 
-    override fun saveBudget(budget: Budget) {
+    override suspend fun saveBudget(budget: Budget) {
         _budgetData.value = budget
     }
 
-    override fun addIncome(income: Income) {
+    override suspend fun addIncome(income: Income) {
         _budgetData.value = _budgetData.value.copy(
             incomes = _budgetData.value.incomes + income
         )
     }
 
-    override fun removeIncome(income: Income) {
+    override suspend fun removeIncome(income: Income) {
         _budgetData.value = _budgetData.value.copy(
             incomes = _budgetData.value.incomes - income
         )
     }
 
-    override fun addExpense(expense: Expense) {
+    override suspend fun addExpense(expense: Expense) {
         _budgetData.value = _budgetData.value.copy(
             expenses = _budgetData.value.expenses + expense
         )
     }
 
-    override fun removeExpense(expense: Expense) {
+    override suspend fun removeExpense(expense: Expense) {
         _budgetData.value = _budgetData.value.copy(
             expenses = _budgetData.value.expenses - expense
         )
     }
 
-    override fun loadBudgetFromDatabase() {
+    override suspend fun loadBudgetFromDatabase() {
         CoroutineScope(Dispatchers.IO).launch {
             val expenses = expenseDao.getAllExpenses()
             val incomes = incomeDao.getAllIncomes()
@@ -64,7 +64,7 @@ class BudgetRepositoryImpl(
         }
     }
 
-    override fun saveBudgetToDatabase(budget: Budget) {
+    override suspend fun saveBudgetToDatabase(budget: Budget) {
         CoroutineScope(Dispatchers.IO).launch {
             // Save all expenses from the budget
             // For simplicity, delete all and re-insert (you could optimize this)

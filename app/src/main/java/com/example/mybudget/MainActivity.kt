@@ -32,10 +32,10 @@ class MainActivity : ComponentActivity() {
                     navController, startDestination = Screen.Budget.route
                 ) {
                     composable(Screen.Budget.route) {
-                        BudgetScreen(budgetViewModel, navController)
+                        BudgetScreen(viewModel = budgetViewModel, navController)
                     }
                     composable(Screen.Expense.route) {
-                        AddExpenseScreen(viewModel = addExpenseViewModel)
+                        AddExpenseScreen(viewModel = addExpenseViewModel, navController)
                     }
                     composable(Screen.Income.route) {
                         AddIncomeScreen(viewModel = addIncomeViewModel, navController)

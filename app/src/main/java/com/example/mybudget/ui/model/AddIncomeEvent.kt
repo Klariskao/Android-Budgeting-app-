@@ -9,5 +9,7 @@ sealed class AddIncomeEvent {
         val type: IncomeType
     ) : AddIncomeEvent()
 
+    data object IncomeAdded : AddIncomeEvent()
+
     data class ShowToast(val message: String) : AddIncomeEvent()
 }

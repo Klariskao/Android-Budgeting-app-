@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.ExpenseFrequency
@@ -39,10 +42,14 @@ import com.example.mybudget.ui.components.BudgetItemCard
 import com.example.mybudget.ui.model.AddExpenseEvent
 
 @Composable
-fun AddExpenseScreen(viewModel: AddExpenseViewModel) {
+fun AddExpenseScreen(
+    viewModel: AddExpenseViewModel,
+    navController: NavController
+) {
     val context = LocalContext.current
 
-    val expenses = viewModel.budget.value.expenses
+    val budget by viewModel.budget.collectAsState()
+    val expenses = budget.expenses
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(ExpenseType.REQUIRED) }
@@ -53,6 +60,10 @@ fun AddExpenseScreen(viewModel: AddExpenseViewModel) {
             when (event) {
                 is AddExpenseEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is AddExpenseEvent.ExpenseAdded -> {
+                    navController.popBackStack() // go back to BudgetScreen
                 }
 
                 is AddExpenseEvent.AddExpense -> {
@@ -158,7 +169,8 @@ fun <T> DropdownSelector(
 fun AddExpenseScreenPreview() {
     MaterialTheme {
         AddExpenseScreen(
-            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao()))
+            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
+            navController = rememberNavController()
         )
     }
 }

@@ -18,6 +18,12 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
     private val _uiEvent = MutableSharedFlow<AddExpenseEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
+    init {
+        viewModelScope.launch {
+            repository.loadBudgetFromDatabase()
+        }
+    }
+
     fun onEvent(event: AddExpenseEvent) {
         when (event) {
             is AddExpenseEvent.AddExpense -> if (event.name.isNotBlank() && event.amount.toDoubleOrNull() != null) {
@@ -27,9 +33,11 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
                     type = event.type,
                     frequency = event.frequency
                 )
-                repository.addExpense(expense)
+
                 viewModelScope.launch {
+                    repository.addExpense(expense)
                     _uiEvent.emit(AddExpenseEvent.ShowToast("Expense added"))
+                    _uiEvent.emit(AddExpenseEvent.ExpenseAdded)
                 }
             } else {
                 viewModelScope.launch {
@@ -37,7 +45,7 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
                 }
             }
 
-            is AddExpenseEvent.ShowToast -> {
+            is AddExpenseEvent.ShowToast, AddExpenseEvent.ExpenseAdded -> {
                 // Handled by the screen
             }
         }

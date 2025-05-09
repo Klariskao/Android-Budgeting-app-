@@ -15,6 +15,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +42,8 @@ fun AddIncomeScreen(
     viewModel: AddIncomeViewModel,
     navController: NavController
 ) {
-    val incomes = viewModel.budget.value.incomes
+    val budget by viewModel.budget.collectAsState()
+    val incomes = budget.incomes
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(IncomeType.MONTHLY) }
@@ -57,6 +59,10 @@ fun AddIncomeScreen(
                     event.message,
                     Toast.LENGTH_SHORT
                 ).show()
+
+                is AddIncomeEvent.IncomeAdded -> {
+                    navController.popBackStack() // go back to BudgetScreen
+                }
 
                 is AddIncomeEvent.AddIncome -> {
                     // Handled by the VM
