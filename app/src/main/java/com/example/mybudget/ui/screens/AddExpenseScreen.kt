@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mybudget.data.local.MockExpenseDao
+import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpenseType
 import com.example.mybudget.repository.BudgetRepositoryImpl
@@ -157,7 +158,7 @@ fun <T> DropdownSelector(
 fun AddExpenseScreenPreview() {
     MaterialTheme {
         AddExpenseScreen(
-            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao()))
+            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao()))
         )
     }
 }

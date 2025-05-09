@@ -30,7 +30,13 @@ class AddIncomeViewModel(
                         _uiEvent.emit(AddIncomeEvent.ShowToast("Enter valid income info"))
                     }
                 } else {
-                    repository.addIncome(Income(name, amount, event.type))
+                    repository.addIncome(
+                        Income(
+                            name = name,
+                            amount = amount,
+                            type = event.type
+                        )
+                    )
                     viewModelScope.launch {
                         _uiEvent.emit(AddIncomeEvent.ShowToast("Income added"))
                     }

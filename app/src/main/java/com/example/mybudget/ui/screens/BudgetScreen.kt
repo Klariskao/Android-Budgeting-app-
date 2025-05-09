@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
+import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.IncomeType
 import com.example.mybudget.repository.BudgetRepositoryImpl
@@ -79,7 +80,7 @@ fun ExpenseItem(expense: Expense) {
 fun BudgetScreenPreview() {
     MaterialTheme {
         BudgetScreen(
-            viewModel = BudgetViewModel(BudgetRepositoryImpl(MockExpenseDao())),
+            viewModel = BudgetViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
             navController = rememberNavController()
         )
     }

@@ -4,9 +4,14 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.mybudget.data.model.Expense
+import com.example.mybudget.data.model.Income
 
-@Database(entities = [Expense::class], version = 1)
+@Database(
+    entities = [Expense::class, Income::class],
+    version = 2
+)
 @TypeConverters(Converters::class)
-abstract class ExpenseDatabase : RoomDatabase() {
+abstract class BudgetDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
+    abstract fun incomeDao(): IncomeDao
 }

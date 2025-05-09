@@ -3,6 +3,7 @@ package com.example.mybudget.data.local
 import androidx.room.TypeConverter
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpenseType
+import com.example.mybudget.data.model.IncomeType
 
 class Converters {
     @TypeConverter
@@ -16,4 +17,10 @@ class Converters {
 
     @TypeConverter
     fun toFrequency(value: String): ExpenseFrequency = ExpenseFrequency.valueOf(value)
+
+    @TypeConverter
+    fun fromIncomeType(value: IncomeType): String = value.name
+
+    @TypeConverter
+    fun toIncomeType(value: String): IncomeType = IncomeType.valueOf(value)
 }

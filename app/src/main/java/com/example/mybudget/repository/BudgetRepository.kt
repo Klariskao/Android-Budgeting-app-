@@ -3,8 +3,11 @@ package com.example.mybudget.repository
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.Income
+import kotlinx.coroutines.flow.StateFlow
 
 interface BudgetRepository {
+    val budgetData: StateFlow<Budget>
+
     fun getBudget(): Budget
     fun saveBudget(budget: Budget)
     fun addExpense(expense: Expense)

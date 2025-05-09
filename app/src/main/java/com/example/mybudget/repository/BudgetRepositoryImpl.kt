@@ -1,53 +1,66 @@
 package com.example.mybudget.repository
 
 import com.example.mybudget.data.local.ExpenseDao
+import com.example.mybudget.data.local.IncomeDao
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.Income
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class BudgetRepositoryImpl(
-    private val expenseDao: ExpenseDao
+    private val expenseDao: ExpenseDao,
+    private val incomeDao: IncomeDao
 ) : BudgetRepository {
 
     // In-memory storage for budget data
-    private var budgetData: Budget = Budget(
-        incomes = emptyList(),
-        expenses = emptyList()
+    private val _budgetData = MutableStateFlow(
+        Budget(
+            incomes = emptyList(),
+            expenses = emptyList()
+        )
     )
+    override val budgetData: StateFlow<Budget> = _budgetData.asStateFlow()
 
-    override fun getBudget(): Budget {
-        return budgetData
-    }
+    override fun getBudget(): Budget = _budgetData.value
 
     override fun saveBudget(budget: Budget) {
-        budgetData = budget
-        // Save to DB
-        saveBudgetToDatabase(budget)
+        _budgetData.value = budget
+    }
+
+    override fun addIncome(income: Income) {
+        _budgetData.value = _budgetData.value.copy(
+            incomes = _budgetData.value.incomes + income
+        )
+    }
+
+    override fun removeIncome(income: Income) {
+        _budgetData.value = _budgetData.value.copy(
+            incomes = _budgetData.value.incomes - income
+        )
     }
 
     override fun addExpense(expense: Expense) {
-        budgetData = budgetData.copy(expenses = budgetData.expenses + expense)
-        // Save to DB
-        CoroutineScope(Dispatchers.IO).launch {
-            expenseDao.insertExpense(expense)
-        }
+        _budgetData.value = _budgetData.value.copy(
+            expenses = _budgetData.value.expenses + expense
+        )
     }
 
     override fun removeExpense(expense: Expense) {
-        budgetData = budgetData.copy(expenses = budgetData.expenses - expense)
-        // Delete from DB
-        CoroutineScope(Dispatchers.IO).launch {
-            expenseDao.deleteExpense(expense)
-        }
+        _budgetData.value = _budgetData.value.copy(
+            expenses = _budgetData.value.expenses - expense
+        )
     }
 
     override fun loadBudgetFromDatabase() {
         CoroutineScope(Dispatchers.IO).launch {
             val expenses = expenseDao.getAllExpenses()
-            budgetData = budgetData.copy(expenses = expenses)
+            val incomes = incomeDao.getAllIncomes()
+            _budgetData.value = Budget(incomes = incomes, expenses = expenses)
         }
     }
 
@@ -61,13 +74,4 @@ class BudgetRepositoryImpl(
             budget.expenses.forEach { expenseDao.insertExpense(it) }
         }
     }
-
-    override fun addIncome(income: Income) {
-        budgetData = budgetData.copy(incomes = budgetData.incomes + income)
-    }
-
-    override fun removeIncome(income: Income) {
-        budgetData = budgetData.copy(incomes = budgetData.incomes - income)
-    }
-
 }
