@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -29,8 +31,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.model.IncomeType
 import com.example.mybudget.repository.BudgetRepositoryImpl
-import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.ui.AddIncomeViewModel
+import com.example.mybudget.ui.components.BudgetItemCard
 import com.example.mybudget.ui.model.AddIncomeEvent
 
 @Composable
@@ -38,6 +40,7 @@ fun AddIncomeScreen(
     viewModel: AddIncomeViewModel,
     navController: NavController
 ) {
+    val incomes = viewModel.budget.value.incomes
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(IncomeType.MONTHLY) }
@@ -48,7 +51,12 @@ fun AddIncomeScreen(
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
             when (event) {
-                is AddIncomeEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                is AddIncomeEvent.ShowToast -> Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+
                 is AddIncomeEvent.AddIncome -> {
                     // Handled by the VM
                 }
@@ -64,7 +72,7 @@ fun AddIncomeScreen(
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Income Name") },
+            label = { Text("Name") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -80,10 +88,10 @@ fun AddIncomeScreen(
             options = IncomeType.entries.toTypedArray(),
             selectedOption = type,
             onOptionSelected = { type = it },
-            label = "Income Type"
+            label = "Type"
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
 
         Button(
             onClick = {
@@ -94,6 +102,18 @@ fun AddIncomeScreen(
             modifier = Modifier.align(Alignment.End)
         ) {
             Text("Add Income")
+        }
+
+        if (incomes.isNotEmpty()) {
+            Spacer(Modifier.height(24.dp))
+
+            Text("Added Incomes", style = MaterialTheme.typography.titleMedium)
+
+            LazyColumn {
+                items(incomes) {
+                    BudgetItemCard(it.name, it.amount, "Type: ${it.type.name}")
+                }
+            }
         }
     }
 }

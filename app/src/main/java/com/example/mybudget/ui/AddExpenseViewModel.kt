@@ -2,14 +2,18 @@ package com.example.mybudget.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.ui.model.AddExpenseEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel() {
+
+    val budget: StateFlow<Budget> = repository.budgetData
 
     private val _uiEvent = MutableSharedFlow<AddExpenseEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
