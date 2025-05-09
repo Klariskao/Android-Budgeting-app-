@@ -8,15 +8,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.mybudget.ui.AddExpenseViewModel
+import com.example.mybudget.ui.AddIncomeViewModel
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.navigation.Screen
 import com.example.mybudget.ui.screens.AddExpenseScreen
+import com.example.mybudget.ui.screens.AddIncomeScreen
 import com.example.mybudget.ui.screens.BudgetScreen
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
     private val budgetViewModel: BudgetViewModel by viewModel()
     private val addExpenseViewModel: AddExpenseViewModel by viewModel()
+    private val addIncomeViewModel: AddIncomeViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,8 +34,11 @@ class MainActivity : ComponentActivity() {
                     composable(Screen.Budget.route) {
                         BudgetScreen(budgetViewModel, navController)
                     }
-                    composable(Screen.Summary.route) {
+                    composable(Screen.Expense.route) {
                         AddExpenseScreen(viewModel = addExpenseViewModel)
+                    }
+                    composable(Screen.Income.route) {
+                        AddIncomeScreen(viewModel = addIncomeViewModel, navController)
                     }
                 }
             }

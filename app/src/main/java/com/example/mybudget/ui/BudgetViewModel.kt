@@ -6,24 +6,17 @@ import androidx.lifecycle.ViewModel
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.ExpenseFrequency
+import com.example.mybudget.data.model.Income
+import com.example.mybudget.data.model.IncomeType
 import com.example.mybudget.repository.BudgetRepository
 
-class BudgetViewModel(private val budgetRepository: BudgetRepository) : ViewModel() {
+class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
 
-    private val _budget = MutableLiveData<Budget>()
+    private val _budget = MutableLiveData(Budget())
     val budget: LiveData<Budget> get() = _budget
 
-    // Initialize with an empty budget or default values
-    init {
-        _budget.value = Budget(monthlyIncome = 0.0, yearlyIncome = 0.0, expenses = emptyList())
-    }
-
-    fun updateMonthlyIncome(amount: Double) {
-        _budget.value = _budget.value?.copy(monthlyIncome = amount)
-    }
-
-    fun updateYearlyIncome(amount: Double) {
-        _budget.value = _budget.value?.copy(yearlyIncome = amount)
+    fun updateIncome(income: Income) {
+        _budget.value = _budget.value?.copy(incomes = _budget.value?.incomes.orEmpty() + income)
     }
 
     fun addExpense(expense: Expense) {
@@ -39,6 +32,10 @@ class BudgetViewModel(private val budgetRepository: BudgetRepository) : ViewMode
             _budget.value?.expenses?.filter {
                 it.frequency == ExpenseFrequency.MONTHLY
             }?.sumOf { it.amount } ?: 0.0
-        return (budget.value?.monthlyIncome ?: 0.0) - totalMonthlyExpenses
+        val totalMonthlyIncome =
+            _budget.value?.incomes?.filter {
+                it.type == IncomeType.MONTHLY
+            }?.sumOf { it.amount } ?: 0.0
+        return totalMonthlyIncome - totalMonthlyExpenses
     }
 }

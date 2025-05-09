@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.mybudget.AddExpenseViewModel
+import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpenseType

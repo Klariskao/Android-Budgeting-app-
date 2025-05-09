@@ -2,6 +2,7 @@ package com.example.mybudget.repository
 
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
+import com.example.mybudget.data.model.Income
 
 interface BudgetRepository {
     fun getBudget(): Budget
@@ -10,4 +11,6 @@ interface BudgetRepository {
     fun removeExpense(expense: Expense)
     fun loadBudgetFromDatabase()
     fun saveBudgetToDatabase(budget: Budget)
+    fun addIncome(income: Income)
+    fun removeIncome(income: Income)
 }

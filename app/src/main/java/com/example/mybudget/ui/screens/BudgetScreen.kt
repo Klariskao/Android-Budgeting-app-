@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.model.Expense
+import com.example.mybudget.data.model.IncomeType
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.navigation.Screen
@@ -29,8 +30,13 @@ fun BudgetScreen(
     val budget by viewModel.budget.observeAsState()
 
     Column(modifier = Modifier.padding(16.dp)) {
+        val monthlyIncome = budget?.incomes.orEmpty().filter {
+            it.type == IncomeType.MONTHLY
+        }.sumOf { it.amount }
         // Display Monthly Income
-        Text("Monthly Income: ${budget?.monthlyIncome}")
+        Text(
+            "Monthly Income: $monthlyIncome"
+        )
 
         // Display Available Funds
         val availableFunds = viewModel.calculateAvailableFunds()
@@ -43,10 +49,19 @@ fun BudgetScreen(
             }
         }
 
+        // Add Income Button
+        Button(
+            onClick = {
+                navController.navigate(Screen.Income.route)
+            }
+        ) {
+            Text("Add Income")
+        }
+
         // Add Expense Button
         Button(
             onClick = {
-                navController.navigate(Screen.Summary.route)
+                navController.navigate(Screen.Expense.route)
             }
         ) {
             Text("Add Expense")

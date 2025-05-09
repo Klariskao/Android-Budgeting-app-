@@ -1,10 +1,11 @@
 package com.example.mybudget.di
 
 import androidx.room.Room
-import com.example.mybudget.AddExpenseViewModel
+import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.data.local.ExpenseDatabase
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.repository.BudgetRepositoryImpl
+import com.example.mybudget.ui.AddIncomeViewModel
 import com.example.mybudget.ui.BudgetViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -26,4 +27,5 @@ val appModule =
 
         viewModel { BudgetViewModel(get()) }
         viewModel { AddExpenseViewModel(get()) }
+        viewModel { AddIncomeViewModel(get()) }
     }

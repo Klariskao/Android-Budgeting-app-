@@ -3,6 +3,7 @@ package com.example.mybudget.repository
 import com.example.mybudget.data.local.ExpenseDao
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
+import com.example.mybudget.data.model.Income
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,8 +14,7 @@ class BudgetRepositoryImpl(
 
     // In-memory storage for budget data
     private var budgetData: Budget = Budget(
-        monthlyIncome = 0.0,
-        yearlyIncome = 0.0,
+        incomes = emptyList(),
         expenses = emptyList()
     )
 
@@ -61,4 +61,13 @@ class BudgetRepositoryImpl(
             budget.expenses.forEach { expenseDao.insertExpense(it) }
         }
     }
+
+    override fun addIncome(income: Income) {
+        budgetData = budgetData.copy(incomes = budgetData.incomes + income)
+    }
+
+    override fun removeIncome(income: Income) {
+        budgetData = budgetData.copy(incomes = budgetData.incomes - income)
+    }
+
 }

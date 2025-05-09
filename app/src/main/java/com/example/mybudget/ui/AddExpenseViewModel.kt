@@ -1,4 +1,4 @@
-package com.example.mybudget
+package com.example.mybudget.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,6 +24,9 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
                     frequency = event.frequency
                 )
                 repository.addExpense(expense)
+                viewModelScope.launch {
+                    _uiEvent.emit(AddExpenseEvent.ShowToast("Expense added"))
+                }
             } else {
                 viewModelScope.launch {
                     _uiEvent.emit(AddExpenseEvent.ShowToast("Please enter valid name and amount."))
