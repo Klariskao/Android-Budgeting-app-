@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -18,10 +19,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mybudget.AddExpenseViewModel
+import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpenseType
+import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.model.AddExpenseEvent
 
 @Composable
@@ -110,5 +114,15 @@ fun <T> DropdownSelector(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddExpenseScreenPreview() {
+    MaterialTheme {
+        AddExpenseScreen(
+            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao()))
+        )
     }
 }
