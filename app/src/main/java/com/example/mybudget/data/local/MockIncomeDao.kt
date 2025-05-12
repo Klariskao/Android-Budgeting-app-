@@ -1,10 +1,17 @@
 package com.example.mybudget.data.local
 
 import com.example.mybudget.data.model.Income
+import com.example.mybudget.data.model.IncomeType
 
 class MockIncomeDao : IncomeDao {
 
-    private val incomeList = mutableListOf<Income>()
+    private val incomeList = mutableListOf(
+        Income(
+            name = "Job",
+            amount = 1500.0,
+            type = IncomeType.MONTHLY
+        )
+    )
 
     override suspend fun insertIncome(income: Income) {
         incomeList.add(income)
