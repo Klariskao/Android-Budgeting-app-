@@ -33,6 +33,7 @@ class BudgetRepositoryImpl(
     }
 
     override suspend fun addIncome(income: Income) {
+        incomeDao.insertIncome(income)
         _budgetData.value = _budgetData.value.copy(
             incomes = _budgetData.value.incomes + income
         )
@@ -45,6 +46,7 @@ class BudgetRepositoryImpl(
     }
 
     override suspend fun addExpense(expense: Expense) {
+        expenseDao.insertExpense(expense)
         _budgetData.value = _budgetData.value.copy(
             expenses = _budgetData.value.expenses + expense
         )
@@ -57,21 +59,17 @@ class BudgetRepositoryImpl(
     }
 
     override suspend fun loadBudgetFromDatabase() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val expenses = expenseDao.getAllExpenses()
-            val incomes = incomeDao.getAllIncomes()
-            _budgetData.value = Budget(incomes = incomes, expenses = expenses)
-        }
+        val expenses = expenseDao.getAllExpenses()
+        val incomes = incomeDao.getAllIncomes()
+        _budgetData.value = Budget(incomes = incomes, expenses = expenses)
     }
 
     override suspend fun saveBudgetToDatabase(budget: Budget) {
-        CoroutineScope(Dispatchers.IO).launch {
-            // Save all expenses from the budget
-            // For simplicity, delete all and re-insert (you could optimize this)
-            val existing = expenseDao.getAllExpenses()
-            existing.forEach { expenseDao.deleteExpense(it) }
+        // Save all expenses from the budget
+        // For simplicity, delete all and re-insert (you could optimize this)
+        val existing = expenseDao.getAllExpenses()
+        existing.forEach { expenseDao.deleteExpense(it) }
 
-            budget.expenses.forEach { expenseDao.insertExpense(it) }
-        }
+        budget.expenses.forEach { expenseDao.insertExpense(it) }
     }
 }
