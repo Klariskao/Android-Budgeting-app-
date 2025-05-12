@@ -1,27 +1,48 @@
 package com.example.mybudget.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.MoneyOff
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
-import com.example.mybudget.data.model.Expense
-import com.example.mybudget.data.model.IncomeType
+import com.example.mybudget.data.model.Budget
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
-import com.example.mybudget.ui.navigation.Screen
 
 @Composable
 fun BudgetScreen(
@@ -29,58 +50,175 @@ fun BudgetScreen(
     navController: NavController
 ) {
     val budget by viewModel.budget.collectAsState()
+    val availableFunds = viewModel.calculateAvailableFunds()
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        val monthlyIncome = budget.incomes.filter {
-            it.type == IncomeType.MONTHLY
-        }.sumOf { it.amount }
-        // Display Monthly Income
-        Text(
-            "Monthly Income: $monthlyIncome"
-        )
-
-        // Display Available Funds
-        val availableFunds = viewModel.calculateAvailableFunds()
-        Text("Available Funds: $availableFunds")
-
-        // Display Expenses
-        LazyColumn {
-            items(budget.expenses) { expense ->
-                ExpenseItem(expense = expense)
+    Scaffold(
+        floatingActionButton = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.padding(end = 16.dp, bottom = 16.dp)
+            ) {
+                ExtendedFloatingActionButton(
+                    text = { Text("Add Income") },
+                    icon = { Icon(Icons.Filled.AttachMoney, null) },
+                    onClick = { navController.navigate("income") },
+                    containerColor = Color(0xFF388E3C),
+                    contentColor = Color.White
+                )
+                ExtendedFloatingActionButton(
+                    text = { Text("Add Expense") },
+                    icon = { Icon(Icons.Filled.MoneyOff, null) },
+                    onClick = { navController.navigate("expense") },
+                    containerColor = Color(0xFFD32F2F),
+                    contentColor = Color.White
+                )
             }
         }
-
-        // Add Income Button
-        Button(
-            onClick = {
-                navController.navigate(Screen.Income.route)
-            }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Add Income")
-        }
-
-        // Add Expense Button
-        Button(
-            onClick = {
-                navController.navigate(Screen.Expense.route)
+            item {
+                BudgetSummaryCard(budget, availableFunds)
             }
-        ) {
-            Text("Add Expense")
+
+            item {
+                Text("Incomes", style = MaterialTheme.typography.titleMedium)
+            }
+
+            if (budget.incomes.isEmpty()) {
+                item {
+                    Text("No incomes added yet.", style = MaterialTheme.typography.bodyMedium)
+                }
+            } else {
+                items(budget.incomes) { income ->
+                    IncomeExpenseItem(
+                        title = income.name,
+                        amount = income.amount,
+                        subtitle = income.type.name.capitalize(),
+                        icon = Icons.Filled.AttachMoney,
+                        color = Color(0xFFE8F5E9)
+                    )
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                Text("Expenses", style = MaterialTheme.typography.titleMedium)
+            }
+
+            if (budget.expenses.isEmpty()) {
+                item {
+                    Text("No expenses added yet.", style = MaterialTheme.typography.bodyMedium)
+                }
+            } else {
+                items(budget.expenses) { expense ->
+                    IncomeExpenseItem(
+                        title = expense.name,
+                        amount = expense.amount,
+                        subtitle = "${expense.frequency.name.capitalize()}, ${expense.type.name.capitalize()}",
+                        icon = Icons.Filled.MoneyOff,
+                        color = Color(0xFFFFEBEE)
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun ExpenseItem(expense: Expense) {
-    Text(text = "${expense.name} - ${expense.amount} (${expense.type})")
+fun BudgetSummaryCard(budget: Budget, availableFunds: Double) {
+    val totalIncome = budget.incomes.sumOf { it.amount }
+    val totalExpense = budget.expenses.sumOf { it.amount }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F8E9)),
+        elevation = CardDefaults.cardElevation(4.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("This Month", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(12.dp))
+            SummaryRow("Total Income", totalIncome, Color(0xFF388E3C))
+            SummaryRow("Total Expenses", totalExpense, Color(0xFFD32F2F))
+            Divider(Modifier.padding(vertical = 8.dp))
+            SummaryRow(
+                "Available Funds",
+                availableFunds,
+                if (availableFunds >= 0) Color(0xFF00796B) else Color.Red
+            )
+        }
+    }
 }
+
+@Composable
+fun SummaryRow(label: String, amount: Double, color: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            "$%.2f".format(amount),
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            color = color
+        )
+    }
+}
+
+@Composable
+fun IncomeExpenseItem(
+    title: String,
+    subtitle: String,
+    amount: Double,
+    icon: ImageVector,
+    color: Color
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = color),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        ListItem(
+            leadingContent = {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            headlineContent = { Text(title, fontWeight = FontWeight.SemiBold) },
+            supportingContent = { Text(subtitle) },
+            trailingContent = {
+                Text(
+                    "$%.2f".format(amount),
+                    fontWeight = FontWeight.Medium,
+                    color = Color.DarkGray
+                )
+            }
+        )
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
 fun BudgetScreenPreview() {
     MaterialTheme {
         BudgetScreen(
-            viewModel = BudgetViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
+            viewModel = BudgetViewModel(
+                BudgetRepositoryImpl(
+                    MockExpenseDao(),
+                    MockIncomeDao()
+                )
+            ),
             navController = rememberNavController()
         )
     }
