@@ -92,7 +92,7 @@ fun AddIncomeScreen(
         )
 
         DropdownSelector(
-            options = IncomeType.entries.toTypedArray(),
+            options = IncomeType.entries,
             selectedOption = type,
             onOptionSelected = { type = it },
             label = "Type"

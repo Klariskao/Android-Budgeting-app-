@@ -1,6 +1,7 @@
 package com.example.mybudget.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,19 +14,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,6 +46,11 @@ import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
+import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
+import com.example.mybudget.ui.dialogs.EditExpenseDialog
+import com.example.mybudget.ui.dialogs.EditIncomeDialog
+import com.example.mybudget.ui.model.BudgetDialogState
+import com.example.mybudget.ui.model.BudgetEvent
 
 @Composable
 fun BudgetScreen(
@@ -51,6 +59,52 @@ fun BudgetScreen(
 ) {
     val budget by viewModel.budget.collectAsState()
     val availableFunds = viewModel.calculateAvailableFunds()
+    val dialogState = viewModel.dialogState
+
+    dialogState?.let { state ->
+        when (state) {
+            is BudgetDialogState.ConfirmDeleteIncome -> {
+                DeleteConfirmationDialog(
+                    message = state.income.name,
+                    onConfirm = {
+                        viewModel.onEvent(BudgetEvent.RemoveIncome(state.income))
+                        viewModel.onEvent(BudgetEvent.CloseDialog)
+                    },
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                )
+            }
+            is BudgetDialogState.ConfirmDeleteExpense -> {
+                DeleteConfirmationDialog(
+                    message = state.expense.name,
+                    onConfirm = {
+                        viewModel.onEvent(BudgetEvent.RemoveExpense(state.expense))
+                        viewModel.onEvent(BudgetEvent.CloseDialog)
+                    },
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                )
+            }
+            is BudgetDialogState.EditIncome -> {
+                EditIncomeDialog(
+                    income = state.income,
+                    onSave = {
+                        viewModel.onEvent(BudgetEvent.UpdateIncome(it))
+                        viewModel.onEvent(BudgetEvent.CloseDialog)
+                    },
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                )
+            }
+            is BudgetDialogState.EditExpense -> {
+                EditExpenseDialog(
+                    expense = state.expense,
+                    onSave = {
+                        viewModel.onEvent(BudgetEvent.UpdateExpense(it))
+                        viewModel.onEvent(BudgetEvent.CloseDialog)
+                    },
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                )
+            }
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -96,13 +150,26 @@ fun BudgetScreen(
                     Text("No incomes added yet.", style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
-                items(budget.incomes) { income ->
-                    IncomeExpenseItem(
+                items(
+                    items = budget.incomes,
+                    key = { "income-${it.id}" }
+                ) { income ->
+                    SwipeableIncomeExpenseItem(
                         title = income.name,
                         amount = income.amount,
-                        subtitle = income.type.name.capitalize(),
+                        subtitle = income.type.name,
                         icon = Icons.Filled.AttachMoney,
-                        color = Color(0xFFE8F5E9)
+                        color = Color(0xFFE8F5E9),
+                        onDelete = {
+                            viewModel.onEvent(
+                                BudgetEvent.ConfirmRemoveIncome(income)
+                            )
+                        },
+                        onEdit = {
+                            viewModel.onEvent(
+                                BudgetEvent.EditIncome(income)
+                            )
+                        }
                     )
                 }
             }
@@ -117,13 +184,26 @@ fun BudgetScreen(
                     Text("No expenses added yet.", style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
-                items(budget.expenses) { expense ->
-                    IncomeExpenseItem(
+                items(
+                    items = budget.expenses,
+                    key = { "expense-${it.id}" }
+                ) { expense ->
+                    SwipeableIncomeExpenseItem(
                         title = expense.name,
                         amount = expense.amount,
-                        subtitle = "${expense.frequency.name.capitalize()}, ${expense.type.name.capitalize()}",
+                        subtitle = "${expense.frequency.name}, ${expense.type.name}",
                         icon = Icons.Filled.MoneyOff,
-                        color = Color(0xFFFFEBEE)
+                        color = Color(0xFFFFEBEE),
+                        onDelete = {
+                            viewModel.onEvent(
+                                BudgetEvent.ConfirmRemoveExpense(expense)
+                            )
+                        },
+                        onEdit = {
+                            viewModel.onEvent(
+                                BudgetEvent.EditExpense(expense)
+                            )
+                        }
                     )
                 }
             }
@@ -147,7 +227,7 @@ fun BudgetSummaryCard(budget: Budget, availableFunds: Double) {
             Spacer(Modifier.height(12.dp))
             SummaryRow("Total Income", totalIncome, Color(0xFF388E3C))
             SummaryRow("Total Expenses", totalExpense, Color(0xFFD32F2F))
-            Divider(Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
             SummaryRow(
                 "Available Funds",
                 availableFunds,
@@ -172,41 +252,79 @@ fun SummaryRow(label: String, amount: Double, color: Color) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IncomeExpenseItem(
+fun SwipeableIncomeExpenseItem(
     title: String,
     subtitle: String,
     amount: Double,
     icon: ImageVector,
-    color: Color
+    color: Color,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = color),
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        ListItem(
-            leadingContent = {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onEdit()
+                    false // Don't auto-dismiss on edit
+                }
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    false // Don't auto-dismiss on delete
+                }
+                SwipeToDismissBoxValue.Settled -> false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.CenterEnd
+            ) {
                 Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            headlineContent = { Text(title, fontWeight = FontWeight.SemiBold) },
-            supportingContent = { Text(subtitle) },
-            trailingContent = {
-                Text(
-                    "$%.2f".format(amount),
-                    fontWeight = FontWeight.Medium,
-                    color = Color.DarkGray
+                    Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = Color.White,
+                    modifier = Modifier.padding(end = 24.dp)
                 )
             }
-        )
-    }
+        },
+        content = {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = color)
+            ) {
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    headlineContent = { Text(title, fontWeight = FontWeight.SemiBold) },
+                    supportingContent = { Text(subtitle) },
+                    trailingContent = {
+                        Text(
+                            "$%.2f".format(amount),
+                            fontWeight = FontWeight.Medium,
+                            color = Color.DarkGray
+                        )
+                    }
+                )
+            }
+        }
+    )
 }
-
 
 @Preview(showBackground = true)
 @Composable

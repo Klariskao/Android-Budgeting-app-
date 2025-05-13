@@ -96,14 +96,14 @@ fun AddExpenseScreen(
         )
 
         DropdownSelector(
-            options = ExpenseType.entries.toTypedArray(),
+            options = ExpenseType.entries,
             selectedOption = type,
             onOptionSelected = { type = it },
             label = "Type"
         )
 
         DropdownSelector(
-            options = ExpenseFrequency.entries.toTypedArray(),
+            options = ExpenseFrequency.entries,
             selectedOption = frequency,
             onOptionSelected = { frequency = it },
             label = "Frequency"
@@ -135,7 +135,7 @@ fun AddExpenseScreen(
 
 @Composable
 fun <T> DropdownSelector(
-    options: Array<T>,
+    options: List<T>,
     selectedOption: T,
     onOptionSelected: (T) -> Unit,
     label: String = ""

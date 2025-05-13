@@ -13,8 +13,9 @@ class MockIncomeDao : IncomeDao {
         )
     )
 
-    override suspend fun insertIncome(income: Income) {
+    override suspend fun insertIncome(income: Income): Long {
         incomeList.add(income)
+        return income.id
     }
 
     override suspend fun deleteIncome(income: Income) {

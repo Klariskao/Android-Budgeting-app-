@@ -33,26 +33,30 @@ class BudgetRepositoryImpl(
     }
 
     override suspend fun addIncome(income: Income) {
-        incomeDao.insertIncome(income)
+        val id = incomeDao.insertIncome(income)
+        val savedIncome = income.copy(id = id)
         _budgetData.value = _budgetData.value.copy(
-            incomes = _budgetData.value.incomes + income
+            incomes = _budgetData.value.incomes + savedIncome
         )
     }
 
     override suspend fun removeIncome(income: Income) {
+        incomeDao.deleteIncome(income)
         _budgetData.value = _budgetData.value.copy(
             incomes = _budgetData.value.incomes - income
         )
     }
 
     override suspend fun addExpense(expense: Expense) {
-        expenseDao.insertExpense(expense)
+        val id = expenseDao.insertExpense(expense)
+        val savedExpense = expense.copy(id = id)
         _budgetData.value = _budgetData.value.copy(
-            expenses = _budgetData.value.expenses + expense
+            expenses = _budgetData.value.expenses + savedExpense
         )
     }
 
     override suspend fun removeExpense(expense: Expense) {
+        expenseDao.deleteExpense(expense)
         _budgetData.value = _budgetData.value.copy(
             expenses = _budgetData.value.expenses - expense
         )

@@ -15,8 +15,9 @@ class MockExpenseDao : ExpenseDao {
         )
     )
 
-    override suspend fun insertExpense(expense: Expense) {
+    override suspend fun insertExpense(expense: Expense): Long {
         expenseList.add(expense)
+        return expense.id
     }
 
     override suspend fun deleteExpense(expense: Expense) {
