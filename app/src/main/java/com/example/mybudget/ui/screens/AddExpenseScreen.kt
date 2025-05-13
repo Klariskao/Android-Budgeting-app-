@@ -10,9 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -34,12 +38,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
+import com.example.mybudget.data.model.ExpenseCategory
 import com.example.mybudget.data.model.ExpenseFrequency
-import com.example.mybudget.data.model.ExpenseType
+import com.example.mybudget.data.model.ExpensePriority
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.ui.components.BudgetItemCard
 import com.example.mybudget.ui.model.AddExpenseEvent
+import java.time.LocalDate
 
 @Composable
 fun AddExpenseScreen(
@@ -52,8 +58,12 @@ fun AddExpenseScreen(
     val expenses = budget.expenses
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(ExpenseType.REQUIRED) }
+    var priority by remember { mutableStateOf(ExpensePriority.REQUIRED) }
     var frequency by remember { mutableStateOf(ExpenseFrequency.MONTHLY) }
+    var category by remember { mutableStateOf(ExpenseCategory.OTHER) }
+    var customFrequencyInDays by remember { mutableStateOf("") }
+    var purchaseDate by remember { mutableStateOf(LocalDate.now()) }
+    val showCustomFrequency = frequency == ExpenseFrequency.CUSTOM
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
@@ -63,7 +73,7 @@ fun AddExpenseScreen(
                 }
 
                 is AddExpenseEvent.ExpenseAdded -> {
-                    navController.popBackStack() // go back to BudgetScreen
+                    navController.popBackStack()
                 }
 
                 is AddExpenseEvent.AddExpense -> {
@@ -96,10 +106,10 @@ fun AddExpenseScreen(
         )
 
         DropdownSelector(
-            options = ExpenseType.entries,
-            selectedOption = type,
-            onOptionSelected = { type = it },
-            label = "Type"
+            options = ExpensePriority.entries,
+            selectedOption = priority,
+            onOptionSelected = { priority = it },
+            label = "Priority"
         )
 
         DropdownSelector(
@@ -109,13 +119,50 @@ fun AddExpenseScreen(
             label = "Frequency"
         )
 
+        if (showCustomFrequency) {
+            OutlinedTextField(
+                value = customFrequencyInDays,
+                onValueChange = { customFrequencyInDays = it },
+                label = { Text("Custom Frequency (days)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        DropdownSelector(
+            options = ExpenseCategory.entries,
+            selectedOption = category,
+            onOptionSelected = { category = it },
+            label = "Category"
+        )
+
+        DatePickerField(
+            selectedDate = purchaseDate,
+            onDateSelected = { purchaseDate = it }
+        )
+
         Spacer(Modifier.height(8.dp))
 
-        Button(onClick = {
-            viewModel.onEvent(AddExpenseEvent.AddExpense(name, amount, type, frequency))
-            name = ""
-            amount = ""
-        }, modifier = Modifier.align(Alignment.End)) {
+        Button(
+            onClick = {
+                viewModel.onEvent(
+                    AddExpenseEvent.AddExpense(
+                        name = name,
+                        amount = amount,
+                        type = priority,
+                        frequency = frequency,
+                        category = category,
+                        customFrequencyInDays = customFrequencyInDays.toIntOrNull(),
+                        purchaseDate = purchaseDate
+                    )
+                )
+                name = ""
+                amount = ""
+                customFrequencyInDays = ""
+                purchaseDate = LocalDate.now()
+            },
+            modifier = Modifier.align(Alignment.End)
+        ) {
             Text("Add Expense")
         }
 
@@ -126,7 +173,11 @@ fun AddExpenseScreen(
 
             LazyColumn {
                 items(expenses) {
-                    BudgetItemCard(it.name, it.amount, "${it.type.name}, ${it.frequency.name}")
+                    BudgetItemCard(
+                        it.name,
+                        it.amount,
+                        "${it.priority.name}, ${it.frequency.name}, ${it.category.name}"
+                    )
                 }
             }
         }
@@ -162,6 +213,40 @@ fun <T> DropdownSelector(
             }
         }
     }
+}
+
+@Composable
+fun DatePickerField(
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val context = LocalContext.current
+    val datePickerDialog = remember {
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onDateSelected(LocalDate.of(year, month + 1, dayOfMonth))
+            },
+            selectedDate.year,
+            selectedDate.monthValue - 1,
+            selectedDate.dayOfMonth
+        )
+    }
+
+    OutlinedTextField(
+        value = selectedDate.toString(),
+        onValueChange = {},
+        readOnly = true,
+        label = { Text("Purchase Date") },
+        trailingIcon = {
+            IconButton(
+                onClick = { datePickerDialog.show() }
+            ) {
+                Icon(Icons.Default.DateRange, contentDescription = "Select date")
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Preview(showBackground = true)

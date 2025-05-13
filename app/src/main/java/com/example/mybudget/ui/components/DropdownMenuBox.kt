@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.mybudget.data.model.ExpenseFrequency
-import com.example.mybudget.data.model.ExpenseType
+import com.example.mybudget.data.model.ExpensePriority
 import com.example.mybudget.data.model.IncomeType
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,10 +71,10 @@ fun PreviewIncomeTypeDropdown() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewExpenseTypeDropdown() {
-    var selected by remember { mutableStateOf(ExpenseType.LUXURY) }
+    var selected by remember { mutableStateOf(ExpensePriority.LUXURY) }
     DropdownMenuBox(
         label = "Expense Type",
-        options = ExpenseType.entries.toList(),
+        options = ExpensePriority.entries.toList(),
         selected = selected,
         onSelected = { selected = it }
     )

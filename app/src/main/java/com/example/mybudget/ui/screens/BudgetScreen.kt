@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -83,6 +81,7 @@ fun BudgetScreen(
                     onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
                 )
             }
+
             is BudgetDialogState.ConfirmDeleteExpense -> {
                 DeleteConfirmationDialog(
                     message = state.expense.name,
@@ -93,6 +92,7 @@ fun BudgetScreen(
                     onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
                 )
             }
+
             is BudgetDialogState.EditIncome -> {
                 EditIncomeDialog(
                     income = state.income,
@@ -103,6 +103,7 @@ fun BudgetScreen(
                     onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
                 )
             }
+
             is BudgetDialogState.EditExpense -> {
                 EditExpenseDialog(
                     expense = state.expense,
@@ -169,7 +170,7 @@ fun BudgetScreen(
                         amount = income.amount,
                         subtitle = income.type.name,
                         icon = Icons.Filled.AttachMoney,
-                        color = Color(0xFFE8F5E9),
+                        color = Color(0xFF388E3C),
                         onDelete = {
                             viewModel.onEvent(
                                 BudgetEvent.ConfirmRemoveIncome(income)
@@ -201,9 +202,9 @@ fun BudgetScreen(
                     SwipeableIncomeExpenseItem(
                         title = expense.name,
                         amount = expense.amount,
-                        subtitle = "${expense.frequency.name}, ${expense.type.name}",
+                        subtitle = "${expense.frequency.name}, ${expense.priority.name}",
                         icon = Icons.Filled.MoneyOff,
-                        color = Color(0xFFFFEBEE),
+                        color = Color(0xFFD32F2F),
                         onDelete = {
                             viewModel.onEvent(
                                 BudgetEvent.ConfirmRemoveExpense(expense)
@@ -345,9 +346,12 @@ fun SwipeableIncomeExpenseItem(
                         itemHeight = coordinates.size.height
                     },
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = color)
+                elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 ListItem(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color),
                     leadingContent = {
                         Icon(
                             icon,

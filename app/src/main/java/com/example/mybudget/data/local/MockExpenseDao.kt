@@ -1,8 +1,9 @@
 package com.example.mybudget.data.local
 
 import com.example.mybudget.data.model.Expense
+import com.example.mybudget.data.model.ExpenseCategory
 import com.example.mybudget.data.model.ExpenseFrequency
-import com.example.mybudget.data.model.ExpenseType
+import com.example.mybudget.data.model.ExpensePriority
 
 class MockExpenseDao : ExpenseDao {
 
@@ -10,8 +11,9 @@ class MockExpenseDao : ExpenseDao {
         Expense(
             name = "Vacation",
             amount = 1234.5,
-            type = ExpenseType.LUXURY,
-            frequency = ExpenseFrequency.ONE_TIME
+            priority = ExpensePriority.LUXURY,
+            frequency = ExpenseFrequency.YEARLY,
+            category = ExpenseCategory.ENTERTAINMENT
         )
     )
 
