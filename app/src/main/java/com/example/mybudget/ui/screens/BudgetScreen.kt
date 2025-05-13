@@ -1,8 +1,10 @@
 package com.example.mybudget.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,10 +35,17 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -263,6 +273,7 @@ fun SwipeableIncomeExpenseItem(
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
+    var itemHeight by remember { mutableIntStateOf(0) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             when (value) {
@@ -282,24 +293,57 @@ fun SwipeableIncomeExpenseItem(
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = Color.White,
-                    modifier = Modifier.padding(end = 24.dp)
-                )
+            val direction = dismissState.dismissDirection
+            val isStartToEnd = direction == SwipeToDismissBoxValue.StartToEnd
+
+            val backgroundColor = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Color(0xFFB9F6CA) // light green
+                SwipeToDismissBoxValue.EndToStart -> Color(0xFFFFCDD2) // light red
+                else -> Color.Transparent
+            }
+
+            val icon = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                else -> null
+            }
+
+            val label = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> "Edit"
+                SwipeToDismissBoxValue.EndToStart -> "Delete"
+                else -> ""
+            }
+
+            if (icon != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(with(LocalDensity.current) { itemHeight.toDp() })
+                        .padding(vertical = 4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(backgroundColor),
+                    contentAlignment = if (isStartToEnd) Alignment.CenterStart else Alignment.CenterEnd
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        Icon(icon, contentDescription = label, tint = Color.Black)
+                        Text(label, color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         },
         content = {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 4.dp)
+                    .onGloballyPositioned { coordinates ->
+                        itemHeight = coordinates.size.height
+                    },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = color)
             ) {
