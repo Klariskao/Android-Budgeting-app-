@@ -1,7 +1,7 @@
 package com.example.mybudget.data.local
 
 import com.example.mybudget.data.model.Income
-import com.example.mybudget.data.model.IncomeType
+import com.example.mybudget.data.model.IncomeFrequency
 
 class MockIncomeDao : IncomeDao {
 
@@ -9,7 +9,7 @@ class MockIncomeDao : IncomeDao {
         Income(
             name = "Job",
             amount = 1500.0,
-            type = IncomeType.MONTHLY
+            frequency = IncomeFrequency.MONTHLY
         )
     )
 

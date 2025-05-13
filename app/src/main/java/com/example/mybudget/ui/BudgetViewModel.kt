@@ -10,7 +10,7 @@ import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.Income
-import com.example.mybudget.data.model.IncomeType
+import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
@@ -53,7 +53,7 @@ class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
     fun calculateAvailableFunds(): Double {
         val currentBudget = budget.value
         val totalMonthlyIncome = currentBudget.incomes
-            .filter { it.type == IncomeType.MONTHLY }
+            .filter { it.frequency == IncomeFrequency.MONTHLY }
             .sumOf { it.amount }
 
         val totalMonthlyExpenses = currentBudget.expenses

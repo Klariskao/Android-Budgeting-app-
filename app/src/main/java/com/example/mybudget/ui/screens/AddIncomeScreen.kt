@@ -10,16 +10,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,25 +36,59 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
-import com.example.mybudget.data.model.IncomeType
+import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.AddIncomeViewModel
 import com.example.mybudget.ui.components.BudgetItemCard
 import com.example.mybudget.ui.model.AddIncomeEvent
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddIncomeScreen(
     viewModel: AddIncomeViewModel,
     navController: NavController
 ) {
+    val context = LocalContext.current
     val budget by viewModel.budget.collectAsState()
     val incomes = budget.incomes
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(IncomeType.MONTHLY) }
+    var frequency by remember { mutableStateOf(IncomeFrequency.MONTHLY) }
+    var firstPaymentDate by remember { mutableStateOf(LocalDate.now()) }
+    var customFrequencyInDays by remember { mutableStateOf("") }
+    val showCustomFrequency = frequency == IncomeFrequency.CUSTOM
 
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = firstPaymentDate.toEpochDay() * 86400000)
+    val datePickerShown = remember { mutableStateOf(false) }
+
+    if (datePickerShown.value) {
+        DatePickerDialog(
+            onDismissRequest = { datePickerShown.value = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        firstPaymentDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                    }
+                    datePickerShown.value = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { datePickerShown.value = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
@@ -71,7 +110,9 @@ fun AddIncomeScreen(
         }
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(
+        modifier = Modifier.padding(16.dp)
+    ) {
         Text("Add Income", style = MaterialTheme.typography.headlineSmall)
 
         Spacer(Modifier.height(16.dp))
@@ -92,19 +133,44 @@ fun AddIncomeScreen(
         )
 
         DropdownSelector(
-            options = IncomeType.entries,
-            selectedOption = type,
-            onOptionSelected = { type = it },
-            label = "Type"
+            options = IncomeFrequency.entries,
+            selectedOption = frequency,
+            onOptionSelected = { frequency = it },
+            label = "Frequency"
         )
+
+        if (showCustomFrequency) {
+            OutlinedTextField(
+                value = customFrequencyInDays,
+                onValueChange = { customFrequencyInDays = it },
+                label = { Text("Custom Frequency (days)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         Spacer(Modifier.height(8.dp))
 
+        OutlinedButton(
+            onClick = { datePickerShown.value = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("First Payment Date: ${firstPaymentDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}")
+        }
+
+        Spacer(Modifier.height(16.dp))
+
         Button(
             onClick = {
-                viewModel.onEvent(AddIncomeEvent.AddIncome(name, amount, type))
-                name = ""
-                amount = ""
+                viewModel.onEvent(
+                    AddIncomeEvent.AddIncome(
+                        name = name,
+                        amount = amount,
+                        frequency = frequency,
+                        firstPaymentDate = firstPaymentDate,
+                        customFrequencyInDays = customFrequencyInDays.toIntOrNull()
+                    )
+                )
             },
             modifier = Modifier.align(Alignment.End)
         ) {
@@ -118,7 +184,7 @@ fun AddIncomeScreen(
 
             LazyColumn {
                 items(incomes) {
-                    BudgetItemCard(it.name, it.amount, "Type: ${it.type.name}")
+                    BudgetItemCard(it.name, it.amount, "Type: ${it.frequency.name}")
                 }
             }
         }

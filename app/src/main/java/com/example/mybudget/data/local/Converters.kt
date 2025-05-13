@@ -4,7 +4,7 @@ import androidx.room.TypeConverter
 import com.example.mybudget.data.model.ExpenseCategory
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpensePriority
-import com.example.mybudget.data.model.IncomeType
+import com.example.mybudget.data.model.IncomeFrequency
 import java.time.LocalDate
 
 class Converters {
@@ -27,10 +27,10 @@ class Converters {
     fun toExpenseFrequency(value: String): ExpenseFrequency = ExpenseFrequency.valueOf(value)
 
     @TypeConverter
-    fun fromIncomeType(value: IncomeType): String = value.name
+    fun fromIncomeFrequency(value: IncomeFrequency): String = value.name
 
     @TypeConverter
-    fun toIncomeType(value: String): IncomeType = IncomeType.valueOf(value)
+    fun toIncomeFrequency(value: String): IncomeFrequency = IncomeFrequency.valueOf(value)
 
     @TypeConverter
     fun fromLocalDate(date: LocalDate): String = date.toString()

@@ -168,7 +168,7 @@ fun BudgetScreen(
                     SwipeableIncomeExpenseItem(
                         title = income.name,
                         amount = income.amount,
-                        subtitle = income.type.name,
+                        subtitle = income.frequency.name,
                         icon = Icons.Filled.AttachMoney,
                         color = Color(0xFF388E3C),
                         onDelete = {

@@ -41,7 +41,7 @@ class AddIncomeViewModel(
                             Income(
                                 name = name,
                                 amount = amount,
-                                type = event.type
+                                frequency = event.frequency
                             )
                         )
                         _uiEvent.emit(AddIncomeEvent.ShowToast("Income added"))

@@ -2,19 +2,23 @@ package com.example.mybudget.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDate
 
 @Entity(tableName = "incomes")
 data class Income(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val amount: Double,
-    val type: IncomeType
+    val frequency: IncomeFrequency,
+    val firstPaymentDate: LocalDate = LocalDate.now(),
+    val customFrequencyInDays: Int? = null
 )
 
-enum class IncomeType {
+enum class IncomeFrequency {
     WEEKLY,
     BI_WEEKLY,
     MONTHLY,
     YEARLY,
-    ONE_TIME
+    ONE_TIME,
+    CUSTOM
 }
