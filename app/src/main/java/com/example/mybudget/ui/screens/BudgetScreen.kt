@@ -1,5 +1,6 @@
 package com.example.mybudget.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -78,11 +79,11 @@ import com.example.mybudget.ui.dialogs.EditIncomeDialog
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
 import com.example.mybudget.ui.model.ExpensesSortOption
+import com.example.mybudget.ui.theme.MyBudgetTheme
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.utils.ColorTemplate
 
 @Composable
 fun BudgetScreen(
@@ -354,7 +355,7 @@ fun IncomeHeader(onAddIncome: () -> Unit) {
             shape = RoundedCornerShape(12.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
             colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color(0xFFEAE2F0),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary
             )
         ) {
@@ -380,7 +381,7 @@ fun ExpenseHeader(onAddExpense: () -> Unit) {
             shape = RoundedCornerShape(12.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
             colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color(0xFFEAE2F0),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary
             )
         ) {
@@ -506,6 +507,17 @@ fun ExpensePieChart(
 ) {
     val context = LocalContext.current
 
+    val pieColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.error,
+        MaterialTheme.colorScheme.surfaceVariant,
+        MaterialTheme.colorScheme.outline
+    ).map { it.toArgb() }
+    val labelColor = MaterialTheme.colorScheme.onBackground.toArgb()
+    val holeColor = MaterialTheme.colorScheme.background.toArgb()
+
     AndroidView(
         modifier = modifier
             .height(300.dp)
@@ -516,10 +528,13 @@ fun ExpensePieChart(
                 isDrawHoleEnabled = true
                 setUsePercentValues(true)
                 setEntryLabelTextSize(12f)
-                setEntryLabelColor(Color.Black.toArgb())
+                setEntryLabelColor(labelColor)
                 centerText = "Expenses"
                 setCenterTextSize(18f)
                 legend.isEnabled = true
+                legend.textColor = labelColor
+                setEntryLabelColor(labelColor)
+                setHoleColor(holeColor)
             }
         },
         update = { chart ->
@@ -528,7 +543,7 @@ fun ExpensePieChart(
             }
 
             val dataSet = PieDataSet(entries, "").apply {
-                colors = ColorTemplate.MATERIAL_COLORS.toList()
+                colors = pieColors
                 sliceSpace = 3f
                 selectionShift = 5f
             }
@@ -536,7 +551,7 @@ fun ExpensePieChart(
             chart.data = PieData(dataSet).apply {
                 setDrawValues(true)
                 setValueTextSize(12f)
-                setValueTextColor(Color.White.toArgb())
+                setValueTextColor(labelColor)
             }
 
             chart.invalidate()
@@ -661,6 +676,22 @@ fun SwipeableIncomeExpenseItem(
 @Composable
 fun BudgetScreenPreview() {
     MaterialTheme {
+        BudgetScreen(
+            viewModel = BudgetViewModel(
+                BudgetRepositoryImpl(
+                    MockExpenseDao(),
+                    MockIncomeDao()
+                )
+            ),
+            navController = rememberNavController()
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun BudgetScreenPreviewDark() {
+    MyBudgetTheme {
         BudgetScreen(
             viewModel = BudgetViewModel(
                 BudgetRepositoryImpl(

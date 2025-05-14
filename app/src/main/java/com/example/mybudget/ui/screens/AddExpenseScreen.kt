@@ -1,6 +1,8 @@
 package com.example.mybudget.ui.screens
 
+import android.content.res.Configuration
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +47,7 @@ import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.ui.components.BudgetItemCard
 import com.example.mybudget.ui.model.AddExpenseEvent
+import com.example.mybudget.ui.theme.MyBudgetTheme
 import java.time.LocalDate
 
 @Composable
@@ -84,7 +87,9 @@ fun AddExpenseScreen(
     }
 
     Column(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
     ) {
         Text("Add Expense", style = MaterialTheme.typography.headlineSmall)
 
@@ -253,6 +258,17 @@ fun DatePickerField(
 @Composable
 fun AddExpenseScreenPreview() {
     MaterialTheme {
+        AddExpenseScreen(
+            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
+            navController = rememberNavController()
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun AddExpenseScreenPreviewDark() {
+    MyBudgetTheme {
         AddExpenseScreen(
             viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
             navController = rememberNavController()

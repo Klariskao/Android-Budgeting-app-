@@ -1,6 +1,8 @@
 package com.example.mybudget.ui.screens
 
+import android.content.res.Configuration
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,6 +43,7 @@ import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.AddIncomeViewModel
 import com.example.mybudget.ui.components.BudgetItemCard
 import com.example.mybudget.ui.model.AddIncomeEvent
+import com.example.mybudget.ui.theme.MyBudgetTheme
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -111,7 +114,9 @@ fun AddIncomeScreen(
     }
 
     Column(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
     ) {
         Text("Add Income", style = MaterialTheme.typography.headlineSmall)
 
@@ -195,6 +200,17 @@ fun AddIncomeScreen(
 @Composable
 fun AddIncomeScreenPreview() {
     MaterialTheme {
+        AddIncomeScreen(
+            viewModel = AddIncomeViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
+            navController = rememberNavController()
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun AddIncomeScreenPreviewDark() {
+    MyBudgetTheme {
         AddIncomeScreen(
             viewModel = AddIncomeViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
             navController = rememberNavController()
