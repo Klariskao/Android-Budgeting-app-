@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,11 +25,16 @@ import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -38,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,6 +58,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -59,6 +68,7 @@ import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.ExpenseFrequency
+import com.example.mybudget.data.model.ExpensePriority
 import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
@@ -67,6 +77,7 @@ import com.example.mybudget.ui.dialogs.EditExpenseDialog
 import com.example.mybudget.ui.dialogs.EditIncomeDialog
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
+import com.example.mybudget.ui.model.ExpensesSortOption
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -80,6 +91,8 @@ fun BudgetScreen(
 ) {
     val budget by viewModel.budget.collectAsState()
     val dialogState = viewModel.dialogState
+    var sortOption by remember { mutableStateOf(ExpensesSortOption.NONE) }
+    var selectedExpensePriorities by remember { mutableStateOf(setOf<ExpensePriority>()) }
 
     dialogState?.let { state ->
         when (state) {
@@ -188,13 +201,32 @@ fun BudgetScreen(
                     Text("No expenses added yet.", style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
+                val sortedExpenses = viewModel.sortExpenses(budget.expenses, sortOption)
+                val filteredExpenses = sortedExpenses.filter {
+                    selectedExpensePriorities.isEmpty() || selectedExpensePriorities.contains(it.priority)
+                }
+
                 item {
+                    SortFilterBar(
+                        selectedSort = sortOption,
+                        selectedExpensePriorities = selectedExpensePriorities,
+                        onSortChange = { sortOption = it },
+                        onFilterChange = { type ->
+                            selectedExpensePriorities = if (type in selectedExpensePriorities)
+                                selectedExpensePriorities - type
+                            else
+                                selectedExpensePriorities + type
+                        }
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
                     ExpensePieChart(
                         data = budget.expenses.map { it.category.name to it.amount.toFloat() }
                     )
                 }
                 items(
-                    items = budget.expenses,
+                    items = filteredExpenses,
                     key = { "expense-${it.id}" }
                 ) { expense ->
                     SwipeableIncomeExpenseItem(
@@ -312,11 +344,11 @@ fun IncomeHeader(onAddIncome: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Incomes", style = MaterialTheme.typography.titleMedium)
+        Text("Incomes", style = MaterialTheme.typography.titleLarge)
         TextButton(
             onClick = onAddIncome,
             shape = RoundedCornerShape(12.dp),
@@ -338,11 +370,11 @@ fun ExpenseHeader(onAddExpense: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Expenses", style = MaterialTheme.typography.titleMedium)
+        Text("Expenses", style = MaterialTheme.typography.titleLarge)
         TextButton(
             onClick = onAddExpense,
             shape = RoundedCornerShape(12.dp),
@@ -355,6 +387,114 @@ fun ExpenseHeader(onAddExpense: () -> Unit) {
             Icon(Icons.Default.MoneyOff, contentDescription = "Add Expense")
             Spacer(modifier = Modifier.width(4.dp))
             Text("Add")
+        }
+    }
+}
+
+@Composable
+fun SortFilterBar(
+    selectedSort: ExpensesSortOption,
+    selectedExpensePriorities: Set<ExpensePriority>,
+    onSortChange: (ExpensesSortOption) -> Unit,
+    onFilterChange: (ExpensePriority) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+    ) {
+        // Row 1: Sort
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Sort by:", style = MaterialTheme.typography.labelLarge)
+
+            SortDropdown(
+                selectedSort = selectedSort,
+                onSortChange = onSortChange
+            )
+        }
+
+        // Row 2: Filter
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Filter by:", style = MaterialTheme.typography.labelLarge)
+            ExpenseTypeFilterBar(
+                selectedTypes = selectedExpensePriorities,
+                onPriorityToggle = { onFilterChange(it) }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SortDropdown(
+    selectedSort: ExpensesSortOption,
+    onSortChange: (ExpensesSortOption) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val textStyle = MaterialTheme.typography.bodySmall.copy(
+        textAlign = TextAlign.Center
+    )
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedSort.label,
+            onValueChange = {},
+            readOnly = true,
+            textStyle = textStyle,
+            modifier = Modifier
+                .menuAnchor()
+                .height(48.dp)
+                .widthIn(max = 160.dp),
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            ExpensesSortOption.entries.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option.name) },
+                    onClick = {
+                        onSortChange(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ExpenseTypeFilterBar(
+    selectedTypes: Set<ExpensePriority>,
+    onPriorityToggle: (ExpensePriority) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(ExpensePriority.entries) { priority ->
+            FilterChip(
+                selected = selectedTypes.contains(priority),
+                onClick = { onPriorityToggle(priority) },
+                label = { Text(priority.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
         }
     }
 }

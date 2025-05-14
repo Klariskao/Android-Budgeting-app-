@@ -22,7 +22,7 @@ enum class ExpensePriority {
 }
 
 enum class ExpenseFrequency {
-    DAILY, WEEKLY, BIWEEKLY, MONTHLY, YEARLY, CUSTOM
+    DAILY, WEEKLY, BIWEEKLY, MONTHLY, YEARLY, ONE_TIME, CUSTOM
 }
 
 enum class ExpenseCategory {

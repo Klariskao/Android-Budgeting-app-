@@ -14,6 +14,7 @@ import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
+import com.example.mybudget.ui.model.ExpensesSortOption
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -61,6 +62,18 @@ class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
             .sumOf { it.amount }
 
         return totalMonthlyIncome - totalMonthlyExpenses
+    }
+
+    fun sortExpenses(expenses: List<Expense>, sortOption: ExpensesSortOption): List<Expense> {
+        return when (sortOption) {
+            ExpensesSortOption.DATE_DESC -> expenses.sortedByDescending { it.purchaseDate }
+            ExpensesSortOption.DATE_ASC -> expenses.sortedBy { it.purchaseDate }
+            ExpensesSortOption.AMOUNT_DESC -> expenses.sortedByDescending { it.amount }
+            ExpensesSortOption.AMOUNT_ASC -> expenses.sortedBy { it.amount }
+            ExpensesSortOption.FREQUENCY -> expenses.sortedBy { it.frequency.name }
+            ExpensesSortOption.NAME -> expenses.sortedBy { it.name }
+            ExpensesSortOption.NONE -> expenses
+        }
     }
 
     private fun updateIncome(edited: Income) {
