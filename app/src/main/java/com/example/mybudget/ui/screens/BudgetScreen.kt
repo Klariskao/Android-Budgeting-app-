@@ -1,5 +1,6 @@
 package com.example.mybudget.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,10 +20,10 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoneyOff
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
@@ -30,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -126,30 +129,7 @@ fun BudgetScreen(
         }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier.padding(end = 16.dp, bottom = 16.dp)
-            ) {
-                ExtendedFloatingActionButton(
-                    text = { Text("Add Income") },
-                    icon = { Icon(Icons.Filled.AttachMoney, null) },
-                    onClick = { navController.navigate("income") },
-                    containerColor = Color(0xFF388E3C),
-                    contentColor = Color.White
-                )
-                ExtendedFloatingActionButton(
-                    text = { Text("Add Expense") },
-                    icon = { Icon(Icons.Filled.MoneyOff, null) },
-                    onClick = { navController.navigate("expense") },
-                    containerColor = Color(0xFFD32F2F),
-                    contentColor = Color.White
-                )
-            }
-        }
-    ) { padding ->
+    Scaffold { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -162,7 +142,9 @@ fun BudgetScreen(
             }
 
             item {
-                Text("Incomes", style = MaterialTheme.typography.titleMedium)
+                IncomeHeader(
+                    onAddIncome = { navController.navigate("income") }
+                )
             }
 
             if (budget.incomes.isEmpty()) {
@@ -196,7 +178,9 @@ fun BudgetScreen(
 
             item {
                 Spacer(Modifier.height(12.dp))
-                Text("Expenses", style = MaterialTheme.typography.titleMedium)
+                ExpenseHeader(
+                    onAddExpense = { navController.navigate("expense") }
+                )
             }
 
             if (budget.expenses.isEmpty()) {
@@ -320,6 +304,58 @@ fun SummaryRow(label: String, amount: Double) {
     ) {
         Text(label)
         Text("$%.2f".format(amount), fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+fun IncomeHeader(onAddIncome: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Incomes", style = MaterialTheme.typography.titleMedium)
+        TextButton(
+            onClick = onAddIncome,
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = Color(0xFFEAE2F0),
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(Icons.Default.AttachMoney, contentDescription = "Add Income")
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Add")
+        }
+    }
+}
+
+@Composable
+fun ExpenseHeader(onAddExpense: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Expenses", style = MaterialTheme.typography.titleMedium)
+        TextButton(
+            onClick = onAddExpense,
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = Color(0xFFEAE2F0),
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(Icons.Default.MoneyOff, contentDescription = "Add Expense")
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Add")
+        }
     }
 }
 
