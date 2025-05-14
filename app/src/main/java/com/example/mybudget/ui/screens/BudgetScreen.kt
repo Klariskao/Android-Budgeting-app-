@@ -22,8 +22,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -52,6 +52,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.Budget
+import com.example.mybudget.data.model.ExpenseFrequency
+import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
@@ -149,7 +151,7 @@ fun BudgetScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                BudgetSummaryCard(budget, availableFunds)
+                BudgetSummaryCard(budget)
             }
 
             item {
@@ -223,45 +225,92 @@ fun BudgetScreen(
 }
 
 @Composable
-fun BudgetSummaryCard(budget: Budget, availableFunds: Double) {
+fun BudgetSummaryCard(
+    budget: Budget,
+    modifier: Modifier = Modifier
+) {
+    val monthlyIncome = budget.incomes
+        .filter { it.frequency == IncomeFrequency.MONTHLY }
+        .sumOf { it.amount }
+
+    val yearlyIncome = budget.incomes
+        .filter { it.frequency == IncomeFrequency.YEARLY }
+        .sumOf { it.amount }
+
+    val monthlyExpenses = budget.expenses
+        .filter { it.frequency == ExpenseFrequency.MONTHLY }
+        .sumOf { it.amount }
+
+    val yearlyExpenses = budget.expenses
+        .filter { it.frequency == ExpenseFrequency.YEARLY }
+        .sumOf { it.amount }
+
     val totalIncome = budget.incomes.sumOf { it.amount }
-    val totalExpense = budget.expenses.sumOf { it.amount }
+    val totalExpenses = budget.expenses.sumOf { it.amount }
+    val availableFunds = totalIncome - totalExpenses
 
     Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F8E9)),
-        elevation = CardDefaults.cardElevation(4.dp),
-        modifier = Modifier.fillMaxWidth()
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("This Month", style = MaterialTheme.typography.titleMedium)
+            Text("Budget Summary", style = MaterialTheme.typography.titleMedium)
+
             Spacer(Modifier.height(12.dp))
-            SummaryRow("Total Income", totalIncome, Color(0xFF388E3C))
-            SummaryRow("Total Expenses", totalExpense, Color(0xFFD32F2F))
-            HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            SummaryRow(
-                "Available Funds",
-                availableFunds,
-                if (availableFunds >= 0) Color(0xFF00796B) else Color.Red
+
+            SummaryRow("Total Income", totalIncome)
+            SummaryRow("Total Expenses", totalExpenses)
+            SummaryRow("Available Funds", availableFunds)
+
+            Spacer(Modifier.height(12.dp))
+
+            LinearProgressIndicator(
+                progress = { (totalExpenses / totalIncome).toFloat().coerceIn(0f, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
             )
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                "Income Breakdown",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            SummaryRow("Monthly Income", monthlyIncome)
+            SummaryRow("Yearly Income", yearlyIncome)
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                "Expense Breakdown",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            SummaryRow("Monthly Expenses", monthlyExpenses)
+            SummaryRow("Yearly Expenses", yearlyExpenses)
         }
     }
 }
 
 @Composable
-fun SummaryRow(label: String, amount: Double, color: Color) {
+fun SummaryRow(label: String, amount: Double) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge)
-        Text(
-            "$%.2f".format(amount),
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = color
-        )
+        Text(label)
+        Text("$%.2f".format(amount), fontWeight = FontWeight.Medium)
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
