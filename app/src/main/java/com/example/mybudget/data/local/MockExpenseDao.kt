@@ -14,6 +14,13 @@ class MockExpenseDao : ExpenseDao {
             priority = ExpensePriority.LUXURY,
             frequency = ExpenseFrequency.YEARLY,
             category = ExpenseCategory.ENTERTAINMENT
+        ),
+        Expense(
+            name = "Rent",
+            amount = 1500.5,
+            priority = ExpensePriority.REQUIRED,
+            frequency = ExpenseFrequency.MONTHLY,
+            category = ExpenseCategory.HOME
         )
     )
 

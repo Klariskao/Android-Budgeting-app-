@@ -92,4 +92,7 @@ dependencies {
     // Koin for Android
     implementation("io.insert-koin:koin-android:3.2.0")
     implementation("io.insert-koin:koin-androidx-compose:3.2.0")
+
+    // Pie chart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

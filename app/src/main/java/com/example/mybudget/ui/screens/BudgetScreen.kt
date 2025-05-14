@@ -41,12 +41,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
@@ -61,6 +64,11 @@ import com.example.mybudget.ui.dialogs.EditExpenseDialog
 import com.example.mybudget.ui.dialogs.EditIncomeDialog
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.utils.ColorTemplate
 
 @Composable
 fun BudgetScreen(
@@ -68,7 +76,6 @@ fun BudgetScreen(
     navController: NavController
 ) {
     val budget by viewModel.budget.collectAsState()
-    val availableFunds = viewModel.calculateAvailableFunds()
     val dialogState = viewModel.dialogState
 
     dialogState?.let { state ->
@@ -197,6 +204,11 @@ fun BudgetScreen(
                     Text("No expenses added yet.", style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
+                item {
+                    ExpensePieChart(
+                        data = budget.expenses.map { it.category.name to it.amount.toFloat() }
+                    )
+                }
                 items(
                     items = budget.expenses,
                     key = { "expense-${it.id}" }
@@ -311,6 +323,50 @@ fun SummaryRow(label: String, amount: Double) {
     }
 }
 
+@Composable
+fun ExpensePieChart(
+    data: List<Pair<String, Float>>,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    AndroidView(
+        modifier = modifier
+            .height(300.dp)
+            .fillMaxWidth(),
+        factory = {
+            PieChart(context).apply {
+                description.isEnabled = false
+                isDrawHoleEnabled = true
+                setUsePercentValues(true)
+                setEntryLabelTextSize(12f)
+                setEntryLabelColor(Color.Black.toArgb())
+                centerText = "Expenses"
+                setCenterTextSize(18f)
+                legend.isEnabled = true
+            }
+        },
+        update = { chart ->
+            val entries = data.map { (label, value) ->
+                PieEntry(value, label)
+            }
+
+            val dataSet = PieDataSet(entries, "").apply {
+                colors = ColorTemplate.MATERIAL_COLORS.toList()
+                sliceSpace = 3f
+                selectionShift = 5f
+            }
+
+            chart.data = PieData(dataSet).apply {
+                setDrawValues(true)
+                setValueTextSize(12f)
+                setValueTextColor(Color.White.toArgb())
+            }
+
+            chart.invalidate()
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -331,10 +387,12 @@ fun SwipeableIncomeExpenseItem(
                     onEdit()
                     false // Don't auto-dismiss on edit
                 }
+
                 SwipeToDismissBoxValue.EndToStart -> {
                     onDelete()
                     false // Don't auto-dismiss on delete
                 }
+
                 SwipeToDismissBoxValue.Settled -> false
             }
         }
