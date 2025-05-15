@@ -3,6 +3,7 @@ package com.example.mybudget.ui.screens
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -77,9 +78,12 @@ import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
 import com.example.mybudget.ui.dialogs.EditExpenseDialog
 import com.example.mybudget.ui.dialogs.EditIncomeDialog
+import com.example.mybudget.ui.helpers.formatCurrency
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
 import com.example.mybudget.ui.model.ExpensesSortOption
+import com.example.mybudget.ui.theme.Green40
+import com.example.mybudget.ui.theme.Green80
 import com.example.mybudget.ui.theme.MyBudgetTheme
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
@@ -304,9 +308,10 @@ fun BudgetSummaryCard(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(8.dp)),
-                color = when {
-                    progress < 0.5f -> MaterialTheme.colorScheme.error
-                    progress == 1f -> MaterialTheme.colorScheme.onSecondary
+                color =
+                when {
+                    progress < 0.5f -> customGreen
+                    progress == 1f -> MaterialTheme.colorScheme.error
                     else -> ProgressIndicatorDefaults.linearColor
                 }
 
@@ -344,7 +349,7 @@ fun SummaryRow(label: String, amount: Double) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label)
-        Text("$%.2f".format(amount), fontWeight = FontWeight.Medium)
+        Text(formatCurrency(amount), fontWeight = FontWeight.Medium)
     }
 }
 
@@ -669,7 +674,7 @@ fun SwipeableIncomeExpenseItem(
                     supportingContent = { Text(subtitle) },
                     trailingContent = {
                         Text(
-                            "$%.2f".format(amount),
+                            formatCurrency(amount),
                             fontWeight = FontWeight.Medium,
                             color = Color.DarkGray
                         )
@@ -679,6 +684,10 @@ fun SwipeableIncomeExpenseItem(
         }
     )
 }
+
+val customGreen: Color
+    @Composable
+    get() = if (isSystemInDarkTheme()) Green80 else Green40
 
 @Preview(showBackground = true)
 @Composable
