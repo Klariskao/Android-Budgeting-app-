@@ -19,12 +19,19 @@ import com.example.mybudget.data.model.IncomeFrequency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun <T> DropdownMenuBox(label: String, options: List<T>, selected: T, onSelected: (T) -> Unit) {
+fun <T> DropdownMenuBox(
+    label: String,
+    options: List<T>,
+    selected: T,
+    onSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
+        modifier = modifier,
     ) {
         OutlinedTextField(
             readOnly = true,
