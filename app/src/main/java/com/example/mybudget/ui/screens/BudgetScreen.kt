@@ -36,6 +36,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -296,12 +297,19 @@ fun BudgetSummaryCard(
 
             Spacer(Modifier.height(12.dp))
 
+            val progress = (totalExpenses / totalIncome).toFloat().coerceIn(0f, 1f)
             LinearProgressIndicator(
-                progress = { (totalExpenses / totalIncome).toFloat().coerceIn(0f, 1f) },
+                progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(8.dp)),
+                color = when {
+                    progress < 0.5f -> MaterialTheme.colorScheme.error
+                    progress == 1f -> MaterialTheme.colorScheme.onSecondary
+                    else -> ProgressIndicatorDefaults.linearColor
+                }
+
             )
 
             Spacer(Modifier.height(12.dp))
