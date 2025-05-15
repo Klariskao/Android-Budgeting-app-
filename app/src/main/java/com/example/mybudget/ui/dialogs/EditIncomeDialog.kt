@@ -29,19 +29,19 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditIncomeDialog(
-    income: Income,
-    onDismiss: () -> Unit,
-    onSave: (Income) -> Unit
-) {
+fun EditIncomeDialog(income: Income, onDismiss: () -> Unit, onSave: (Income) -> Unit) {
     var name by remember { mutableStateOf(income.name) }
     var amount by remember { mutableStateOf(income.amount.toString()) }
     var type by remember { mutableStateOf(income.frequency) }
     var firstPaymentDate by remember { mutableStateOf(income.firstPaymentDate) }
-    var customFrequencyInDays by remember { mutableStateOf(income.customFrequencyInDays?.toString() ?: "") }
+    var customFrequencyInDays by remember {
+        mutableStateOf(
+            income.customFrequencyInDays?.toString() ?: "",
+        )
+    }
 
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = firstPaymentDate.toEpochDay() * 86_400_000
+        initialSelectedDateMillis = firstPaymentDate.toEpochDay() * 86_400_000,
     )
     val datePickerShown = remember { mutableStateOf(false) }
 
@@ -49,14 +49,16 @@ fun EditIncomeDialog(
         DatePickerDialog(
             onDismissRequest = { datePickerShown.value = false },
             confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        firstPaymentDate = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()
-                    }
-                    datePickerShown.value = false
-                }) {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            firstPaymentDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        datePickerShown.value = false
+                    },
+                ) {
                     Text("OK")
                 }
             },
@@ -64,7 +66,7 @@ fun EditIncomeDialog(
                 TextButton(onClick = { datePickerShown.value = false }) {
                     Text("Cancel")
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
@@ -84,12 +86,18 @@ fun EditIncomeDialog(
                                 amount = parsedAmount,
                                 frequency = type,
                                 firstPaymentDate = firstPaymentDate,
-                                customFrequencyInDays = if (type == IncomeFrequency.CUSTOM) customDays else null
-                            )
+                                customFrequencyInDays = if (type ==
+                                    IncomeFrequency.CUSTOM
+                                ) {
+                                    customDays
+                                } else {
+                                    null
+                                },
+                            ),
                         )
                     }
                     onDismiss()
-                }
+                },
             ) {
                 Text("Save")
             }
@@ -102,26 +110,26 @@ fun EditIncomeDialog(
         title = { Text("Edit Income") },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Name") },
-                    singleLine = true
+                    singleLine = true,
                 )
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text("Amount") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
                 DropdownMenuBox(
                     label = "Frequency",
                     options = IncomeFrequency.entries,
                     selected = type,
-                    onSelected = { type = it }
+                    onSelected = { type = it },
                 )
                 if (type == IncomeFrequency.CUSTOM) {
                     OutlinedTextField(
@@ -129,17 +137,25 @@ fun EditIncomeDialog(
                         onValueChange = { customFrequencyInDays = it },
                         label = { Text("Custom Frequency (days)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
+                        singleLine = true,
                     )
                 }
 
                 OutlinedButton(
-                    onClick = { datePickerShown.value = true }
+                    onClick = { datePickerShown.value = true },
                 ) {
-                    Text("First Payment Date: ${firstPaymentDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}")
+                    Text(
+                        "First Payment Date: ${
+                            firstPaymentDate.format(
+                                DateTimeFormatter.ofPattern(
+                                    "MMM dd, yyyy",
+                                ),
+                            )
+                        }",
+                    )
                 }
             }
-        }
+        },
     )
 }
 
@@ -150,10 +166,9 @@ fun PreviewEditIncomeDialog() {
         income = Income(
             name = "Salary",
             amount = 4000.0,
-            frequency = IncomeFrequency.MONTHLY
+            frequency = IncomeFrequency.MONTHLY,
         ),
         onDismiss = {},
-        onSave = {}
+        onSave = {},
     )
 }
-

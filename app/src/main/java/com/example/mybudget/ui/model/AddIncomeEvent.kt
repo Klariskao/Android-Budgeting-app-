@@ -9,7 +9,7 @@ sealed class AddIncomeEvent {
         val amount: String,
         val frequency: IncomeFrequency,
         val firstPaymentDate: LocalDate,
-        val customFrequencyInDays: Int? = null
+        val customFrequencyInDays: Int? = null,
     ) : AddIncomeEvent()
 
     data object IncomeAdded : AddIncomeEvent()

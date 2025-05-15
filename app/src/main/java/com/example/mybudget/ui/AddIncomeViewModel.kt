@@ -11,9 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-class AddIncomeViewModel(
-    private val repository: BudgetRepository
-) : ViewModel() {
+class AddIncomeViewModel(private val repository: BudgetRepository) : ViewModel() {
 
     val budget: StateFlow<Budget> = repository.budgetData
 
@@ -41,8 +39,8 @@ class AddIncomeViewModel(
                             Income(
                                 name = name,
                                 amount = amount,
-                                frequency = event.frequency
-                            )
+                                frequency = event.frequency,
+                            ),
                         )
                         _uiEvent.emit(AddIncomeEvent.ShowToast("Income added"))
                         _uiEvent.emit(AddIncomeEvent.IncomeAdded)

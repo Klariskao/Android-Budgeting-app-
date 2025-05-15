@@ -5,24 +5,19 @@ import com.example.mybudget.data.local.IncomeDao
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.Income
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
-class BudgetRepositoryImpl(
-    private val expenseDao: ExpenseDao,
-    private val incomeDao: IncomeDao
-) : BudgetRepository {
+class BudgetRepositoryImpl(private val expenseDao: ExpenseDao, private val incomeDao: IncomeDao) :
+    BudgetRepository {
 
     // In-memory storage for budget data
     private val _budgetData = MutableStateFlow(
         Budget(
             incomes = emptyList(),
-            expenses = emptyList()
-        )
+            expenses = emptyList(),
+        ),
     )
     override val budgetData: StateFlow<Budget> = _budgetData.asStateFlow()
 
@@ -36,14 +31,14 @@ class BudgetRepositoryImpl(
         val id = incomeDao.insertIncome(income)
         val savedIncome = income.copy(id = id)
         _budgetData.value = _budgetData.value.copy(
-            incomes = _budgetData.value.incomes + savedIncome
+            incomes = _budgetData.value.incomes + savedIncome,
         )
     }
 
     override suspend fun removeIncome(income: Income) {
         incomeDao.deleteIncome(income)
         _budgetData.value = _budgetData.value.copy(
-            incomes = _budgetData.value.incomes - income
+            incomes = _budgetData.value.incomes - income,
         )
     }
 
@@ -51,14 +46,14 @@ class BudgetRepositoryImpl(
         val id = expenseDao.insertExpense(expense)
         val savedExpense = expense.copy(id = id)
         _budgetData.value = _budgetData.value.copy(
-            expenses = _budgetData.value.expenses + savedExpense
+            expenses = _budgetData.value.expenses + savedExpense,
         )
     }
 
     override suspend fun removeExpense(expense: Expense) {
         expenseDao.deleteExpense(expense)
         _budgetData.value = _budgetData.value.copy(
-            expenses = _budgetData.value.expenses - expense
+            expenses = _budgetData.value.expenses - expense,
         )
     }
 

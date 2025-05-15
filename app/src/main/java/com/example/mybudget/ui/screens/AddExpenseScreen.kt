@@ -51,10 +51,7 @@ import com.example.mybudget.ui.theme.MyBudgetTheme
 import java.time.LocalDate
 
 @Composable
-fun AddExpenseScreen(
-    viewModel: AddExpenseViewModel,
-    navController: NavController
-) {
+fun AddExpenseScreen(viewModel: AddExpenseViewModel, navController: NavController) {
     val context = LocalContext.current
 
     val budget by viewModel.budget.collectAsState()
@@ -89,7 +86,7 @@ fun AddExpenseScreen(
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text("Add Expense", style = MaterialTheme.typography.headlineSmall)
 
@@ -99,7 +96,7 @@ fun AddExpenseScreen(
             value = name,
             onValueChange = { name = it },
             label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
@@ -107,21 +104,21 @@ fun AddExpenseScreen(
             onValueChange = { amount = it },
             label = { Text("Amount") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         DropdownSelector(
             options = ExpensePriority.entries,
             selectedOption = priority,
             onOptionSelected = { priority = it },
-            label = "Priority"
+            label = "Priority",
         )
 
         DropdownSelector(
             options = ExpenseFrequency.entries,
             selectedOption = frequency,
             onOptionSelected = { frequency = it },
-            label = "Frequency"
+            label = "Frequency",
         )
 
         if (showCustomFrequency) {
@@ -130,7 +127,7 @@ fun AddExpenseScreen(
                 onValueChange = { customFrequencyInDays = it },
                 label = { Text("Custom Frequency (days)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
@@ -138,12 +135,12 @@ fun AddExpenseScreen(
             options = ExpenseCategory.entries,
             selectedOption = category,
             onOptionSelected = { category = it },
-            label = "Category"
+            label = "Category",
         )
 
         DatePickerField(
             selectedDate = purchaseDate,
-            onDateSelected = { purchaseDate = it }
+            onDateSelected = { purchaseDate = it },
         )
 
         Spacer(Modifier.height(8.dp))
@@ -158,15 +155,15 @@ fun AddExpenseScreen(
                         frequency = frequency,
                         category = category,
                         customFrequencyInDays = customFrequencyInDays.toIntOrNull(),
-                        purchaseDate = purchaseDate
-                    )
+                        purchaseDate = purchaseDate,
+                    ),
                 )
                 name = ""
                 amount = ""
                 customFrequencyInDays = ""
                 purchaseDate = LocalDate.now()
             },
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier.align(Alignment.End),
         ) {
             Text("Add Expense")
         }
@@ -181,7 +178,7 @@ fun AddExpenseScreen(
                     BudgetItemCard(
                         it.name,
                         it.amount,
-                        "${it.priority.name}, ${it.frequency.name}, ${it.category.name}"
+                        "${it.priority.name}, ${it.frequency.name}, ${it.category.name}",
                     )
                 }
             }
@@ -194,18 +191,18 @@ fun <T> DropdownSelector(
     options: List<T>,
     selectedOption: T,
     onOptionSelected: (T) -> Unit,
-    label: String = ""
+    label: String = "",
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Box {
         OutlinedButton(onClick = { expanded = true }) {
-            Text(text = "$label: ${selectedOption.toString()}")
+            Text(text = "$label: $selectedOption")
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
@@ -213,7 +210,7 @@ fun <T> DropdownSelector(
                     onClick = {
                         onOptionSelected(option)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -221,10 +218,7 @@ fun <T> DropdownSelector(
 }
 
 @Composable
-fun DatePickerField(
-    selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
-) {
+fun DatePickerField(selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
     val context = LocalContext.current
     val datePickerDialog = remember {
         android.app.DatePickerDialog(
@@ -234,7 +228,7 @@ fun DatePickerField(
             },
             selectedDate.year,
             selectedDate.monthValue - 1,
-            selectedDate.dayOfMonth
+            selectedDate.dayOfMonth,
         )
     }
 
@@ -245,12 +239,12 @@ fun DatePickerField(
         label = { Text("Purchase Date") },
         trailingIcon = {
             IconButton(
-                onClick = { datePickerDialog.show() }
+                onClick = { datePickerDialog.show() },
             ) {
                 Icon(Icons.Default.DateRange, contentDescription = "Select date")
             }
         },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     )
 }
 
@@ -259,8 +253,13 @@ fun DatePickerField(
 fun AddExpenseScreenPreview() {
     MaterialTheme {
         AddExpenseScreen(
-            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
-            navController = rememberNavController()
+            viewModel = AddExpenseViewModel(
+                BudgetRepositoryImpl(
+                    MockExpenseDao(),
+                    MockIncomeDao(),
+                ),
+            ),
+            navController = rememberNavController(),
         )
     }
 }
@@ -270,8 +269,13 @@ fun AddExpenseScreenPreview() {
 fun AddExpenseScreenPreviewDark() {
     MyBudgetTheme {
         AddExpenseScreen(
-            viewModel = AddExpenseViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
-            navController = rememberNavController()
+            viewModel = AddExpenseViewModel(
+                BudgetRepositoryImpl(
+                    MockExpenseDao(),
+                    MockIncomeDao(),
+                ),
+            ),
+            navController = rememberNavController(),
         )
     }
 }

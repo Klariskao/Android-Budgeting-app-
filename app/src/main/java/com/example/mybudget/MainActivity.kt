@@ -29,7 +29,8 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 val navController = rememberNavController()
                 NavHost(
-                    navController, startDestination = Screen.Budget.route
+                    navController,
+                    startDestination = Screen.Budget.route,
                 ) {
                     composable(Screen.Budget.route) {
                         BudgetScreen(viewModel = budgetViewModel, navController)

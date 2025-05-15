@@ -11,7 +11,7 @@ data class Income(
     val amount: Double,
     val frequency: IncomeFrequency,
     val firstPaymentDate: LocalDate = LocalDate.now(),
-    val customFrequencyInDays: Int? = null
+    val customFrequencyInDays: Int? = null,
 )
 
 enum class IncomeFrequency {
@@ -20,5 +20,5 @@ enum class IncomeFrequency {
     MONTHLY,
     YEARLY,
     ONE_TIME,
-    CUSTOM
+    CUSTOM,
 }

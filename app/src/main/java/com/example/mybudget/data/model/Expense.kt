@@ -13,18 +13,31 @@ data class Expense(
     val frequency: ExpenseFrequency,
     val category: ExpenseCategory,
     val customFrequencyInDays: Int? = null, // Null unless frequency is CUSTOM
-    val purchaseDate: LocalDate = LocalDate.now()
+    val purchaseDate: LocalDate = LocalDate.now(),
 )
 
-
 enum class ExpensePriority {
-    REQUIRED, GOOD_TO_HAVE, NICE_TO_HAVE, LUXURY
+    REQUIRED,
+    GOOD_TO_HAVE,
+    NICE_TO_HAVE,
+    LUXURY,
 }
 
 enum class ExpenseFrequency {
-    DAILY, WEEKLY, BIWEEKLY, MONTHLY, YEARLY, ONE_TIME, CUSTOM
+    DAILY,
+    WEEKLY,
+    BIWEEKLY,
+    MONTHLY,
+    YEARLY,
+    ONE_TIME,
+    CUSTOM,
 }
 
 enum class ExpenseCategory {
-    HOME, FOOD, HEALTH, TRANSPORT, ENTERTAINMENT, OTHER
+    HOME,
+    FOOD,
+    HEALTH,
+    TRANSPORT,
+    ENTERTAINMENT,
+    OTHER,
 }

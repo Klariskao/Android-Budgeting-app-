@@ -26,7 +26,9 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
 
     fun onEvent(event: AddExpenseEvent) {
         when (event) {
-            is AddExpenseEvent.AddExpense -> if (event.name.isNotBlank() && event.amount.toDoubleOrNull() != null) {
+            is AddExpenseEvent.AddExpense -> if (event.name.isNotBlank() &&
+                event.amount.toDoubleOrNull() != null
+            ) {
                 val expense = Expense(
                     name = event.name,
                     amount = event.amount.toDouble(),
@@ -34,7 +36,7 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
                     frequency = event.frequency,
                     category = event.category,
                     customFrequencyInDays = event.customFrequencyInDays,
-                    purchaseDate = event.purchaseDate
+                    purchaseDate = event.purchaseDate,
                 )
 
                 viewModelScope.launch {

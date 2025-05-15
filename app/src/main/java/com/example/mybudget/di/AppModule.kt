@@ -1,12 +1,12 @@
 package com.example.mybudget.di
 
 import androidx.room.Room
-import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.data.local.BudgetDatabase
 import com.example.mybudget.data.local.ExpenseDao
 import com.example.mybudget.data.local.IncomeDao
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.repository.BudgetRepositoryImpl
+import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.ui.AddIncomeViewModel
 import com.example.mybudget.ui.BudgetViewModel
 import org.koin.android.ext.koin.androidContext
@@ -19,7 +19,7 @@ val appModule =
             Room.databaseBuilder(
                 androidContext(),
                 BudgetDatabase::class.java,
-                "budget_db"
+                "budget_db",
             ).fallbackToDestructiveMigration().build()
         }
 

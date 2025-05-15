@@ -19,17 +19,12 @@ import com.example.mybudget.data.model.IncomeFrequency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun <T> DropdownMenuBox(
-    label: String,
-    options: List<T>,
-    selected: T,
-    onSelected: (T) -> Unit
-) {
+fun <T> DropdownMenuBox(label: String, options: List<T>, selected: T, onSelected: (T) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { expanded = !expanded },
     ) {
         OutlinedTextField(
             readOnly = true,
@@ -37,11 +32,11 @@ fun <T> DropdownMenuBox(
             onValueChange = {},
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor()
+            modifier = Modifier.menuAnchor(),
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
@@ -49,7 +44,7 @@ fun <T> DropdownMenuBox(
                     onClick = {
                         onSelected(option)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -64,7 +59,7 @@ fun PreviewIncomeTypeDropdown() {
         label = "Income Type",
         options = IncomeFrequency.entries,
         selected = selected,
-        onSelected = { selected = it }
+        onSelected = { selected = it },
     )
 }
 
@@ -76,7 +71,7 @@ fun PreviewExpenseTypeDropdown() {
         label = "Expense Type",
         options = ExpensePriority.entries.toList(),
         selected = selected,
-        onSelected = { selected = it }
+        onSelected = { selected = it },
     )
 }
 
@@ -88,6 +83,6 @@ fun PreviewExpenseFrequencyDropdown() {
         label = "Frequency",
         options = ExpenseFrequency.entries,
         selected = selected,
-        onSelected = { selected = it }
+        onSelected = { selected = it },
     )
 }

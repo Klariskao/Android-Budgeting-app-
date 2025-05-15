@@ -9,7 +9,7 @@ import com.example.mybudget.data.model.Income
 @Dao
 interface IncomeDao {
     @Insert
-    suspend fun insertIncome(income: Income) : Long
+    suspend fun insertIncome(income: Income): Long
 
     @Delete
     suspend fun deleteIncome(income: Income)

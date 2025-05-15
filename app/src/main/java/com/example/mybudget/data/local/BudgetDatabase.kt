@@ -8,7 +8,7 @@ import com.example.mybudget.data.model.Income
 
 @Database(
     entities = [Expense::class, Income::class],
-    version = 5
+    version = 5,
 )
 @TypeConverters(Converters::class)
 abstract class BudgetDatabase : RoomDatabase() {

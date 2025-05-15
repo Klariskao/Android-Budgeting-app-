@@ -8,11 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun DeleteConfirmationDialog(
-    message: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
+fun DeleteConfirmationDialog(message: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
         confirmButton = {
@@ -26,7 +22,7 @@ fun DeleteConfirmationDialog(
             }
         },
         title = { Text("Confirm Deletion") },
-        text = { Text("Are you sure you want to delete $message?") }
+        text = { Text("Are you sure you want to delete $message?") },
     )
 }
 
@@ -37,7 +33,7 @@ fun DeleteConfirmationDialogPreview() {
         DeleteConfirmationDialog(
             message = "Job",
             onConfirm = {},
-            onDismiss = {}
+            onDismiss = {},
         )
     }
 }

@@ -13,9 +13,8 @@ sealed class AddExpenseEvent {
         val frequency: ExpenseFrequency,
         val category: ExpenseCategory,
         val customFrequencyInDays: Int? = null,
-        val purchaseDate: LocalDate
+        val purchaseDate: LocalDate,
     ) : AddExpenseEvent()
-
 
     data object ExpenseAdded : AddExpenseEvent()
 

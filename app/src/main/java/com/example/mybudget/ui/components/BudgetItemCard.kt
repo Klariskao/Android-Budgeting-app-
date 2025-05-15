@@ -23,7 +23,7 @@ fun BudgetItemCard(title: String, amount: Double, subtitle: String) {
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
@@ -41,8 +41,8 @@ fun BudgetItemCardPreview() {
     MaterialTheme {
         BudgetItemCard(
             title = "Budget card",
-            amount = 1234.50,
-            subtitle = "Weekly"
+            amount = 1234.5,
+            subtitle = "Weekly",
         )
     }
 }

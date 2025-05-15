@@ -91,10 +91,7 @@ import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 
 @Composable
-fun BudgetScreen(
-    viewModel: BudgetViewModel,
-    navController: NavController
-) {
+fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
     val budget by viewModel.budget.collectAsState()
     val dialogState = viewModel.dialogState
     var sortOption by remember { mutableStateOf(ExpensesSortOption.NONE) }
@@ -109,7 +106,7 @@ fun BudgetScreen(
                         viewModel.onEvent(BudgetEvent.RemoveIncome(state.income))
                         viewModel.onEvent(BudgetEvent.CloseDialog)
                     },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
                 )
             }
 
@@ -120,7 +117,7 @@ fun BudgetScreen(
                         viewModel.onEvent(BudgetEvent.RemoveExpense(state.expense))
                         viewModel.onEvent(BudgetEvent.CloseDialog)
                     },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
                 )
             }
 
@@ -131,7 +128,7 @@ fun BudgetScreen(
                         viewModel.onEvent(BudgetEvent.UpdateIncome(it))
                         viewModel.onEvent(BudgetEvent.CloseDialog)
                     },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
                 )
             }
 
@@ -142,7 +139,7 @@ fun BudgetScreen(
                         viewModel.onEvent(BudgetEvent.UpdateExpense(it))
                         viewModel.onEvent(BudgetEvent.CloseDialog)
                     },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) }
+                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
                 )
             }
         }
@@ -150,11 +147,12 @@ fun BudgetScreen(
 
     Scaffold { padding ->
         LazyColumn(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
                 BudgetSummaryCard(budget)
@@ -162,7 +160,7 @@ fun BudgetScreen(
 
             item {
                 IncomeHeader(
-                    onAddIncome = { navController.navigate("income") }
+                    onAddIncome = { navController.navigate("income") },
                 )
             }
 
@@ -173,7 +171,7 @@ fun BudgetScreen(
             } else {
                 items(
                     items = budget.incomes,
-                    key = { "income-${it.id}" }
+                    key = { "income-${it.id}" },
                 ) { income ->
                     SwipeableIncomeExpenseItem(
                         title = income.name,
@@ -183,14 +181,14 @@ fun BudgetScreen(
                         color = Color(0xFF388E3C),
                         onDelete = {
                             viewModel.onEvent(
-                                BudgetEvent.ConfirmRemoveIncome(income)
+                                BudgetEvent.ConfirmRemoveIncome(income),
                             )
                         },
                         onEdit = {
                             viewModel.onEvent(
-                                BudgetEvent.EditIncome(income)
+                                BudgetEvent.EditIncome(income),
                             )
-                        }
+                        },
                     )
                 }
             }
@@ -198,7 +196,7 @@ fun BudgetScreen(
             item {
                 Spacer(Modifier.height(12.dp))
                 ExpenseHeader(
-                    onAddExpense = { navController.navigate("expense") }
+                    onAddExpense = { navController.navigate("expense") },
                 )
             }
 
@@ -208,9 +206,11 @@ fun BudgetScreen(
                 }
             } else {
                 val sortedExpenses = viewModel.sortExpenses(budget.expenses, sortOption)
-                val filteredExpenses = sortedExpenses.filter {
-                    selectedExpensePriorities.isEmpty() || selectedExpensePriorities.contains(it.priority)
-                }
+                val filteredExpenses =
+                    sortedExpenses.filter {
+                        selectedExpensePriorities.isEmpty() ||
+                            selectedExpensePriorities.contains(it.priority)
+                    }
 
                 item {
                     SortFilterBar(
@@ -218,22 +218,24 @@ fun BudgetScreen(
                         selectedExpensePriorities = selectedExpensePriorities,
                         onSortChange = { sortOption = it },
                         onFilterChange = { type ->
-                            selectedExpensePriorities = if (type in selectedExpensePriorities)
-                                selectedExpensePriorities - type
-                            else
-                                selectedExpensePriorities + type
-                        }
+                            selectedExpensePriorities =
+                                if (type in selectedExpensePriorities) {
+                                    selectedExpensePriorities - type
+                                } else {
+                                    selectedExpensePriorities + type
+                                }
+                        },
                     )
 
                     Spacer(Modifier.height(12.dp))
 
                     ExpensePieChart(
-                        data = budget.expenses.map { it.category.name to it.amount.toFloat() }
+                        data = budget.expenses.map { it.category.name to it.amount.toFloat() },
                     )
                 }
                 items(
                     items = filteredExpenses,
-                    key = { "expense-${it.id}" }
+                    key = { "expense-${it.id}" },
                 ) { expense ->
                     SwipeableIncomeExpenseItem(
                         title = expense.name,
@@ -243,14 +245,14 @@ fun BudgetScreen(
                         color = Color(0xFFD32F2F),
                         onDelete = {
                             viewModel.onEvent(
-                                BudgetEvent.ConfirmRemoveExpense(expense)
+                                BudgetEvent.ConfirmRemoveExpense(expense),
                             )
                         },
                         onEdit = {
                             viewModel.onEvent(
-                                BudgetEvent.EditExpense(expense)
+                                BudgetEvent.EditExpense(expense),
                             )
-                        }
+                        },
                     )
                 }
             }
@@ -259,36 +261,38 @@ fun BudgetScreen(
 }
 
 @Composable
-fun BudgetSummaryCard(
-    budget: Budget,
-    modifier: Modifier = Modifier
-) {
-    val monthlyIncome = budget.incomes
-        .filter { it.frequency == IncomeFrequency.MONTHLY }
-        .sumOf { it.amount }
+fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
+    val monthlyIncome =
+        budget.incomes
+            .filter { it.frequency == IncomeFrequency.MONTHLY }
+            .sumOf { it.amount }
 
-    val yearlyIncome = budget.incomes
-        .filter { it.frequency == IncomeFrequency.YEARLY }
-        .sumOf { it.amount }
+    val yearlyIncome =
+        budget.incomes
+            .filter { it.frequency == IncomeFrequency.YEARLY }
+            .sumOf { it.amount }
 
-    val monthlyExpenses = budget.expenses
-        .filter { it.frequency == ExpenseFrequency.MONTHLY }
-        .sumOf { it.amount }
+    val monthlyExpenses =
+        budget.expenses
+            .filter { it.frequency == ExpenseFrequency.MONTHLY }
+            .sumOf { it.amount }
 
-    val yearlyExpenses = budget.expenses
-        .filter { it.frequency == ExpenseFrequency.YEARLY }
-        .sumOf { it.amount }
+    val yearlyExpenses =
+        budget.expenses
+            .filter { it.frequency == ExpenseFrequency.YEARLY }
+            .sumOf { it.amount }
 
     val totalIncome = budget.incomes.sumOf { it.amount }
     val totalExpenses = budget.expenses.sumOf { it.amount }
     val availableFunds = totalIncome - totalExpenses
 
     Card(
-        modifier = modifier
+        modifier =
+        modifier
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Budget Summary", style = MaterialTheme.typography.titleMedium)
@@ -304,7 +308,8 @@ fun BudgetSummaryCard(
             val progress = (totalExpenses / totalIncome).toFloat().coerceIn(0f, 1f)
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(8.dp)),
@@ -313,8 +318,7 @@ fun BudgetSummaryCard(
                     progress < 0.5f -> customGreen
                     progress == 1f -> MaterialTheme.colorScheme.error
                     else -> ProgressIndicatorDefaults.linearColor
-                }
-
+                },
             )
 
             Spacer(Modifier.height(12.dp))
@@ -322,7 +326,7 @@ fun BudgetSummaryCard(
             Text(
                 "Income Breakdown",
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
             SummaryRow("Monthly Income", monthlyIncome)
             SummaryRow("Yearly Income", yearlyIncome)
@@ -332,7 +336,7 @@ fun BudgetSummaryCard(
             Text(
                 "Expense Breakdown",
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
             SummaryRow("Monthly Expenses", monthlyExpenses)
             SummaryRow("Yearly Expenses", yearlyExpenses)
@@ -343,10 +347,11 @@ fun BudgetSummaryCard(
 @Composable
 fun SummaryRow(label: String, amount: Double) {
     Row(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label)
         Text(formatCurrency(amount), fontWeight = FontWeight.Medium)
@@ -356,21 +361,23 @@ fun SummaryRow(label: String, amount: Double) {
 @Composable
 fun IncomeHeader(onAddIncome: () -> Unit) {
     Row(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("Incomes", style = MaterialTheme.typography.titleLarge)
         TextButton(
             onClick = onAddIncome,
             shape = RoundedCornerShape(12.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-            colors = ButtonDefaults.outlinedButtonColors(
+            colors =
+            ButtonDefaults.outlinedButtonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+                contentColor = MaterialTheme.colorScheme.primary,
+            ),
         ) {
             Icon(Icons.Default.AttachMoney, contentDescription = "Add Income")
             Spacer(modifier = Modifier.width(4.dp))
@@ -382,21 +389,23 @@ fun IncomeHeader(onAddIncome: () -> Unit) {
 @Composable
 fun ExpenseHeader(onAddExpense: () -> Unit) {
     Row(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("Expenses", style = MaterialTheme.typography.titleLarge)
         TextButton(
             onClick = onAddExpense,
             shape = RoundedCornerShape(12.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-            colors = ButtonDefaults.outlinedButtonColors(
+            colors =
+            ButtonDefaults.outlinedButtonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+                contentColor = MaterialTheme.colorScheme.primary,
+            ),
         ) {
             Icon(Icons.Default.MoneyOff, contentDescription = "Add Expense")
             Spacer(modifier = Modifier.width(4.dp))
@@ -410,35 +419,36 @@ fun SortFilterBar(
     selectedSort: ExpensesSortOption,
     selectedExpensePriorities: Set<ExpensePriority>,
     onSortChange: (ExpensesSortOption) -> Unit,
-    onFilterChange: (ExpensePriority) -> Unit
+    onFilterChange: (ExpensePriority) -> Unit,
 ) {
     Column(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
+            .padding(horizontal = 8.dp),
     ) {
         // Row 1: Sort
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("Sort by:", style = MaterialTheme.typography.labelLarge)
 
             SortDropdown(
                 selectedSort = selectedSort,
-                onSortChange = onSortChange
+                onSortChange = onSortChange,
             )
         }
 
         // Row 2: Filter
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("Filter by:", style = MaterialTheme.typography.labelLarge)
             ExpenseTypeFilterBar(
                 selectedTypes = selectedExpensePriorities,
-                onPriorityToggle = { onFilterChange(it) }
+                onPriorityToggle = { onFilterChange(it) },
             )
         }
     }
@@ -446,35 +456,34 @@ fun SortFilterBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SortDropdown(
-    selectedSort: ExpensesSortOption,
-    onSortChange: (ExpensesSortOption) -> Unit
-) {
+fun SortDropdown(selectedSort: ExpensesSortOption, onSortChange: (ExpensesSortOption) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val textStyle = MaterialTheme.typography.bodySmall.copy(
-        textAlign = TextAlign.Center
-    )
+    val textStyle =
+        MaterialTheme.typography.bodySmall.copy(
+            textAlign = TextAlign.Center,
+        )
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { expanded = !expanded },
     ) {
         OutlinedTextField(
             value = selectedSort.label,
             onValueChange = {},
             readOnly = true,
             textStyle = textStyle,
-            modifier = Modifier
+            modifier =
+            Modifier
                 .menuAnchor()
                 .height(48.dp)
                 .widthIn(max = 160.dp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
         )
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             ExpensesSortOption.entries.forEach { option ->
                 DropdownMenuItem(
@@ -482,57 +491,56 @@ fun SortDropdown(
                     onClick = {
                         onSortChange(option)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
     }
 }
 
-
 @Composable
 fun ExpenseTypeFilterBar(
     selectedTypes: Set<ExpensePriority>,
     onPriorityToggle: (ExpensePriority) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyRow(
-        modifier = modifier
+        modifier =
+        modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(ExpensePriority.entries) { priority ->
             FilterChip(
                 selected = selectedTypes.contains(priority),
                 onClick = { onPriorityToggle(priority) },
                 label = { Text(priority.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier.padding(vertical = 4.dp),
             )
         }
     }
 }
 
 @Composable
-fun ExpensePieChart(
-    data: List<Pair<String, Float>>,
-    modifier: Modifier = Modifier
-) {
+fun ExpensePieChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    val pieColors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.error,
-        MaterialTheme.colorScheme.surfaceVariant,
-        MaterialTheme.colorScheme.outline
-    ).map { it.toArgb() }
+    val pieColors =
+        listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.secondary,
+            MaterialTheme.colorScheme.tertiary,
+            MaterialTheme.colorScheme.error,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.outline,
+        ).map { it.toArgb() }
     val labelColor = MaterialTheme.colorScheme.onBackground.toArgb()
     val holeColor = MaterialTheme.colorScheme.background.toArgb()
 
     AndroidView(
-        modifier = modifier
+        modifier =
+        modifier
             .height(300.dp)
             .fillMaxWidth(),
         factory = {
@@ -551,24 +559,27 @@ fun ExpensePieChart(
             }
         },
         update = { chart ->
-            val entries = data.map { (label, value) ->
-                PieEntry(value, label)
-            }
+            val entries =
+                data.map { (label, value) ->
+                    PieEntry(value, label)
+                }
 
-            val dataSet = PieDataSet(entries, "").apply {
-                colors = pieColors
-                sliceSpace = 3f
-                selectionShift = 5f
-            }
+            val dataSet =
+                PieDataSet(entries, "").apply {
+                    colors = pieColors
+                    sliceSpace = 3f
+                    selectionShift = 5f
+                }
 
-            chart.data = PieData(dataSet).apply {
-                setDrawValues(true)
-                setValueTextSize(12f)
-                setValueTextColor(labelColor)
-            }
+            chart.data =
+                PieData(dataSet).apply {
+                    setDrawValues(true)
+                    setValueTextSize(12f)
+                    setValueTextColor(labelColor)
+                }
 
             chart.invalidate()
-        }
+        },
     )
 }
 
@@ -581,26 +592,27 @@ fun SwipeableIncomeExpenseItem(
     icon: ImageVector,
     color: Color,
     onDelete: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
 ) {
     var itemHeight by remember { mutableIntStateOf(0) }
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    onEdit()
-                    false // Don't auto-dismiss on edit
-                }
+    val dismissState =
+        rememberSwipeToDismissBoxState(
+            confirmValueChange = { value ->
+                when (value) {
+                    SwipeToDismissBoxValue.StartToEnd -> {
+                        onEdit()
+                        false // Don't auto-dismiss on edit
+                    }
 
-                SwipeToDismissBoxValue.EndToStart -> {
-                    onDelete()
-                    false // Don't auto-dismiss on delete
-                }
+                    SwipeToDismissBoxValue.EndToStart -> {
+                        onDelete()
+                        false // Don't auto-dismiss on delete
+                    }
 
-                SwipeToDismissBoxValue.Settled -> false
-            }
-        }
-    )
+                    SwipeToDismissBoxValue.Settled -> false
+                }
+            },
+        )
 
     SwipeToDismissBox(
         state = dismissState,
@@ -608,39 +620,44 @@ fun SwipeableIncomeExpenseItem(
             val direction = dismissState.dismissDirection
             val isStartToEnd = direction == SwipeToDismissBoxValue.StartToEnd
 
-            val backgroundColor = when (direction) {
-                SwipeToDismissBoxValue.StartToEnd -> Color(0xFFB9F6CA) // light green
-                SwipeToDismissBoxValue.EndToStart -> Color(0xFFFFCDD2) // light red
-                else -> Color.Transparent
-            }
+            val backgroundColor =
+                when (direction) {
+                    SwipeToDismissBoxValue.StartToEnd -> Color(0xFFB9F6CA) // light green
+                    SwipeToDismissBoxValue.EndToStart -> Color(0xFFFFCDD2) // light red
+                    else -> Color.Transparent
+                }
 
-            val icon = when (direction) {
-                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
-                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
-                else -> null
-            }
+            val icon =
+                when (direction) {
+                    SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                    SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                    else -> null
+                }
 
-            val label = when (direction) {
-                SwipeToDismissBoxValue.StartToEnd -> "Edit"
-                SwipeToDismissBoxValue.EndToStart -> "Delete"
-                else -> ""
-            }
+            val label =
+                when (direction) {
+                    SwipeToDismissBoxValue.StartToEnd -> "Edit"
+                    SwipeToDismissBoxValue.EndToStart -> "Delete"
+                    else -> ""
+                }
 
             if (icon != null) {
                 Box(
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
                         .height(with(LocalDensity.current) { itemHeight.toDp() })
                         .padding(vertical = 4.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(backgroundColor),
-                    contentAlignment = if (isStartToEnd) Alignment.CenterStart else Alignment.CenterEnd
+                    contentAlignment = if (isStartToEnd) Alignment.CenterStart else Alignment.CenterEnd,
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
+                        modifier =
+                        Modifier
+                            .padding(horizontal = 20.dp),
                     ) {
                         Icon(icon, contentDescription = label, tint = Color.Black)
                         Text(label, color = Color.Black, fontWeight = FontWeight.Bold)
@@ -650,24 +667,26 @@ fun SwipeableIncomeExpenseItem(
         },
         content = {
             Card(
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
                     .onGloballyPositioned { coordinates ->
                         itemHeight = coordinates.size.height
                     },
                 shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
+                elevation = CardDefaults.cardElevation(2.dp),
             ) {
                 ListItem(
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
                         .background(color),
                     leadingContent = {
                         Icon(
                             icon,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     },
                     headlineContent = { Text(title, fontWeight = FontWeight.SemiBold) },
@@ -676,12 +695,12 @@ fun SwipeableIncomeExpenseItem(
                         Text(
                             formatCurrency(amount),
                             fontWeight = FontWeight.Medium,
-                            color = Color.DarkGray
+                            color = Color.DarkGray,
                         )
-                    }
+                    },
                 )
             }
-        }
+        },
     )
 }
 
@@ -694,13 +713,14 @@ val customGreen: Color
 fun BudgetScreenPreview() {
     MaterialTheme {
         BudgetScreen(
-            viewModel = BudgetViewModel(
+            viewModel =
+            BudgetViewModel(
                 BudgetRepositoryImpl(
                     MockExpenseDao(),
-                    MockIncomeDao()
-                )
+                    MockIncomeDao(),
+                ),
             ),
-            navController = rememberNavController()
+            navController = rememberNavController(),
         )
     }
 }
@@ -710,13 +730,14 @@ fun BudgetScreenPreview() {
 fun BudgetScreenPreviewDark() {
     MyBudgetTheme {
         BudgetScreen(
-            viewModel = BudgetViewModel(
+            viewModel =
+            BudgetViewModel(
                 BudgetRepositoryImpl(
                     MockExpenseDao(),
-                    MockIncomeDao()
-                )
+                    MockIncomeDao(),
+                ),
             ),
-            navController = rememberNavController()
+            navController = rememberNavController(),
         )
     }
 }

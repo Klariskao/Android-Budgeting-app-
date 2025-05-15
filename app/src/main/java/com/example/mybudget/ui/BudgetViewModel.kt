@@ -35,16 +35,24 @@ class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
         when (event) {
             is BudgetEvent.EditIncome -> dialogState = BudgetDialogState.EditIncome(event.income)
             is BudgetEvent.EditExpense -> dialogState = BudgetDialogState.EditExpense(event.expense)
-            is BudgetEvent.ConfirmRemoveIncome -> dialogState =
-                BudgetDialogState.ConfirmDeleteIncome(event.income)
+            is BudgetEvent.ConfirmRemoveIncome ->
+                dialogState =
+                    BudgetDialogState.ConfirmDeleteIncome(event.income)
 
-            is BudgetEvent.ConfirmRemoveExpense -> dialogState =
-                BudgetDialogState.ConfirmDeleteExpense(event.expense)
+            is BudgetEvent.ConfirmRemoveExpense ->
+                dialogState =
+                    BudgetDialogState.ConfirmDeleteExpense(event.expense)
 
             is BudgetEvent.AddIncome -> viewModelScope.launch { repository.addIncome(event.income) }
-            is BudgetEvent.AddExpense -> viewModelScope.launch { repository.addExpense(event.expense) }
-            is BudgetEvent.RemoveIncome -> viewModelScope.launch { repository.removeIncome(event.income) }
-            is BudgetEvent.RemoveExpense -> viewModelScope.launch { repository.removeExpense(event.expense) }
+            is BudgetEvent.AddExpense -> viewModelScope.launch {
+                repository.addExpense(event.expense)
+            }
+            is BudgetEvent.RemoveIncome -> viewModelScope.launch {
+                repository.removeIncome(event.income)
+            }
+            is BudgetEvent.RemoveExpense -> viewModelScope.launch {
+                repository.removeExpense(event.expense)
+            }
             is BudgetEvent.UpdateIncome -> updateIncome(event.income)
             is BudgetEvent.UpdateExpense -> updateExpense(event.expense)
             BudgetEvent.CloseDialog -> dialogState = null
@@ -64,8 +72,8 @@ class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
         return totalMonthlyIncome - totalMonthlyExpenses
     }
 
-    fun sortExpenses(expenses: List<Expense>, sortOption: ExpensesSortOption): List<Expense> {
-        return when (sortOption) {
+    fun sortExpenses(expenses: List<Expense>, sortOption: ExpensesSortOption): List<Expense> =
+        when (sortOption) {
             ExpensesSortOption.DATE_DESC -> expenses.sortedByDescending { it.purchaseDate }
             ExpensesSortOption.DATE_ASC -> expenses.sortedBy { it.purchaseDate }
             ExpensesSortOption.AMOUNT_DESC -> expenses.sortedByDescending { it.amount }
@@ -74,7 +82,6 @@ class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
             ExpensesSortOption.NAME -> expenses.sortedBy { it.name }
             ExpensesSortOption.NONE -> expenses
         }
-    }
 
     private fun updateIncome(edited: Income) {
         viewModelScope.launch {

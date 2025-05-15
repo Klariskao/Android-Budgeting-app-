@@ -7,5 +7,5 @@ enum class ExpensesSortOption(val label: String) {
     AMOUNT_ASC("Amount ↑"),
     FREQUENCY("Frequency"),
     NAME("Name"),
-    NONE("None")
+    NONE("None"),
 }

@@ -31,11 +31,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditExpenseDialog(
-    expense: Expense,
-    onDismiss: () -> Unit,
-    onSave: (Expense) -> Unit
-) {
+fun EditExpenseDialog(expense: Expense, onDismiss: () -> Unit, onSave: (Expense) -> Unit) {
     var name by remember { mutableStateOf(expense.name) }
     var amount by remember { mutableStateOf(expense.amount.toString()) }
     var selectedPriority by remember { mutableStateOf(expense.priority) }
@@ -43,14 +39,14 @@ fun EditExpenseDialog(
     var selectedCategory by remember { mutableStateOf(expense.category) }
     var customFrequencyDays by remember {
         mutableStateOf(
-            expense.customFrequencyInDays?.toString() ?: ""
+            expense.customFrequencyInDays?.toString() ?: "",
         )
     }
     var purchaseDate by remember { mutableStateOf(expense.purchaseDate) }
 
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = purchaseDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
-            .toEpochMilli()
+            .toEpochMilli(),
     )
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -69,13 +65,19 @@ fun EditExpenseDialog(
                                 priority = selectedPriority,
                                 frequency = selectedFrequency,
                                 category = selectedCategory,
-                                customFrequencyInDays = if (selectedFrequency == ExpenseFrequency.CUSTOM) customDays else null,
-                                purchaseDate = purchaseDate
-                            )
+                                customFrequencyInDays = if (selectedFrequency ==
+                                    ExpenseFrequency.CUSTOM
+                                ) {
+                                    customDays
+                                } else {
+                                    null
+                                },
+                                purchaseDate = purchaseDate,
+                            ),
                         )
                     }
                     onDismiss()
-                }
+                },
             ) {
                 Text("Save")
             }
@@ -88,32 +90,35 @@ fun EditExpenseDialog(
         title = { Text("Edit Expense") },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") }
+                    label = { Text("Name") },
                 )
 
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text("Amount") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number,
+                    ),
                 )
 
                 DropdownMenuBox(
                     label = "Priority",
                     options = ExpensePriority.entries,
                     selected = selectedPriority,
-                    onSelected = { selectedPriority = it }
+                    onSelected = { selectedPriority = it },
                 )
 
                 DropdownMenuBox(
                     label = "Frequency",
                     options = ExpenseFrequency.entries,
                     selected = selectedFrequency,
-                    onSelected = { selectedFrequency = it }
+                    onSelected = { selectedFrequency = it },
                 )
 
                 if (selectedFrequency == ExpenseFrequency.CUSTOM) {
@@ -121,7 +126,9 @@ fun EditExpenseDialog(
                         value = customFrequencyDays,
                         onValueChange = { customFrequencyDays = it },
                         label = { Text("Custom Frequency (days)") },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number,
+                        ),
                     )
                 }
 
@@ -129,12 +136,12 @@ fun EditExpenseDialog(
                     label = "Category",
                     options = ExpenseCategory.entries,
                     selected = selectedCategory,
-                    onSelected = { selectedCategory = it }
+                    onSelected = { selectedCategory = it },
                 )
 
                 // Date Picker
                 OutlinedButton(
-                    onClick = { showDatePicker = true }
+                    onClick = { showDatePicker = true },
                 ) {
                     Text("Purchase Date: ${purchaseDate.format(DateTimeFormatter.ISO_DATE)}")
                 }
@@ -151,20 +158,20 @@ fun EditExpenseDialog(
                                                 .toLocalDate()
                                     }
                                     showDatePicker = false
-                                }
+                                },
                             ) { Text("OK") }
                         },
                         dismissButton = {
                             TextButton(
-                                onClick = { showDatePicker = false }
+                                onClick = { showDatePicker = false },
                             ) { Text("Cancel") }
-                        }
+                        },
                     ) {
                         DatePicker(state = datePickerState)
                     }
                 }
             }
-        }
+        },
     )
 }
 
@@ -177,10 +184,9 @@ fun PreviewEditExpenseDialog() {
             amount = 1200.0,
             priority = ExpensePriority.REQUIRED,
             frequency = ExpenseFrequency.MONTHLY,
-            category = ExpenseCategory.HOME
+            category = ExpenseCategory.HOME,
         ),
         onDismiss = {},
-        onSave = {}
+        onSave = {},
     )
 }
-

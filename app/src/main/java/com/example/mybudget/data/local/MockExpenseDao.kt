@@ -13,15 +13,15 @@ class MockExpenseDao : ExpenseDao {
             amount = 1234.5,
             priority = ExpensePriority.LUXURY,
             frequency = ExpenseFrequency.YEARLY,
-            category = ExpenseCategory.ENTERTAINMENT
+            category = ExpenseCategory.ENTERTAINMENT,
         ),
         Expense(
             name = "Rent",
             amount = 1500.5,
             priority = ExpensePriority.REQUIRED,
             frequency = ExpenseFrequency.MONTHLY,
-            category = ExpenseCategory.HOME
-        )
+            category = ExpenseCategory.HOME,
+        ),
     )
 
     override suspend fun insertExpense(expense: Expense): Long {
@@ -33,7 +33,5 @@ class MockExpenseDao : ExpenseDao {
         expenseList.remove(expense)
     }
 
-    override suspend fun getAllExpenses(): List<Expense> {
-        return expenseList
-    }
+    override suspend fun getAllExpenses(): List<Expense> = expenseList
 }

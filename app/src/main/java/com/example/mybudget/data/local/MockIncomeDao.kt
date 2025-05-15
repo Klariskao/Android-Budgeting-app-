@@ -9,8 +9,8 @@ class MockIncomeDao : IncomeDao {
         Income(
             name = "Job",
             amount = 1500.0,
-            frequency = IncomeFrequency.MONTHLY
-        )
+            frequency = IncomeFrequency.MONTHLY,
+        ),
     )
 
     override suspend fun insertIncome(income: Income): Long {
@@ -22,7 +22,5 @@ class MockIncomeDao : IncomeDao {
         incomeList.remove(income)
     }
 
-    override suspend fun getAllIncomes(): List<Income> {
-        return incomeList.toList()
-    }
+    override suspend fun getAllIncomes(): List<Income> = incomeList.toList()
 }

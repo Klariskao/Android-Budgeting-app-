@@ -51,10 +51,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddIncomeScreen(
-    viewModel: AddIncomeViewModel,
-    navController: NavController
-) {
+fun AddIncomeScreen(viewModel: AddIncomeViewModel, navController: NavController) {
     val context = LocalContext.current
     val budget by viewModel.budget.collectAsState()
     val incomes = budget.incomes
@@ -65,21 +62,26 @@ fun AddIncomeScreen(
     var customFrequencyInDays by remember { mutableStateOf("") }
     val showCustomFrequency = frequency == IncomeFrequency.CUSTOM
 
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = firstPaymentDate.toEpochDay() * 86400000)
+    val datePickerState =
+        rememberDatePickerState(
+            initialSelectedDateMillis = firstPaymentDate.toEpochDay() * 86400000,
+        )
     val datePickerShown = remember { mutableStateOf(false) }
 
     if (datePickerShown.value) {
         DatePickerDialog(
             onDismissRequest = { datePickerShown.value = false },
             confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        firstPaymentDate = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()
-                    }
-                    datePickerShown.value = false
-                }) {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            firstPaymentDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        datePickerShown.value = false
+                    },
+                ) {
                     Text("OK")
                 }
             },
@@ -87,7 +89,7 @@ fun AddIncomeScreen(
                 TextButton(onClick = { datePickerShown.value = false }) {
                     Text("Cancel")
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
@@ -99,7 +101,7 @@ fun AddIncomeScreen(
                 is AddIncomeEvent.ShowToast -> Toast.makeText(
                     context,
                     event.message,
-                    Toast.LENGTH_SHORT
+                    Toast.LENGTH_SHORT,
                 ).show()
 
                 is AddIncomeEvent.IncomeAdded -> {
@@ -116,7 +118,7 @@ fun AddIncomeScreen(
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text("Add Income", style = MaterialTheme.typography.headlineSmall)
 
@@ -126,7 +128,7 @@ fun AddIncomeScreen(
             value = name,
             onValueChange = { name = it },
             label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
@@ -134,14 +136,14 @@ fun AddIncomeScreen(
             onValueChange = { amount = it },
             label = { Text("Amount") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         DropdownSelector(
             options = IncomeFrequency.entries,
             selectedOption = frequency,
             onOptionSelected = { frequency = it },
-            label = "Frequency"
+            label = "Frequency",
         )
 
         if (showCustomFrequency) {
@@ -150,7 +152,7 @@ fun AddIncomeScreen(
                 onValueChange = { customFrequencyInDays = it },
                 label = { Text("Custom Frequency (days)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
@@ -158,9 +160,13 @@ fun AddIncomeScreen(
 
         OutlinedButton(
             onClick = { datePickerShown.value = true },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("First Payment Date: ${firstPaymentDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}")
+            Text(
+                "First Payment Date: ${firstPaymentDate.format(
+                    DateTimeFormatter.ofPattern("MMM dd, yyyy"),
+                )}",
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -173,11 +179,11 @@ fun AddIncomeScreen(
                         amount = amount,
                         frequency = frequency,
                         firstPaymentDate = firstPaymentDate,
-                        customFrequencyInDays = customFrequencyInDays.toIntOrNull()
-                    )
+                        customFrequencyInDays = customFrequencyInDays.toIntOrNull(),
+                    ),
                 )
             },
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier.align(Alignment.End),
         ) {
             Text("Add Income")
         }
@@ -202,7 +208,7 @@ fun AddIncomeScreenPreview() {
     MaterialTheme {
         AddIncomeScreen(
             viewModel = AddIncomeViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
-            navController = rememberNavController()
+            navController = rememberNavController(),
         )
     }
 }
@@ -213,7 +219,7 @@ fun AddIncomeScreenPreviewDark() {
     MyBudgetTheme {
         AddIncomeScreen(
             viewModel = AddIncomeViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
-            navController = rememberNavController()
+            navController = rememberNavController(),
         )
     }
 }
