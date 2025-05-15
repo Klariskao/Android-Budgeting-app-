@@ -16,19 +16,24 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.mybudget.data.model.Expense
-import com.example.mybudget.data.model.ExpenseCategory
+import androidx.lifecycle.SavedStateHandle
+import com.example.mybudget.data.local.MockExpenseDao
+import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.ExpenseFrequency
-import com.example.mybudget.data.model.ExpensePriority
+import com.example.mybudget.repository.BudgetRepositoryImpl
+import com.example.mybudget.ui.ExpenseDetailViewModel
 import com.example.mybudget.ui.helpers.formatCurrency
 import com.example.mybudget.ui.theme.MyBudgetTheme
-import java.time.LocalDate
 
 @Composable
-fun ExpenseDetailScreen(expense: Expense) {
+fun ExpenseDetailScreen(viewModel: ExpenseDetailViewModel) {
+    val expense by viewModel.expense.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -38,6 +43,8 @@ fun ExpenseDetailScreen(expense: Expense) {
     ) {
         Text(
             text = expense.name,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary,
         )
@@ -76,7 +83,7 @@ fun ExpenseDetailScreen(expense: Expense) {
                     InfoRow(label = "Purchase Link", value = expense.linkToPurchase)
                 }
                 if (!expense.note.isNullOrBlank()) {
-                    InfoRow(label = "Note", value = expense.note)
+                    InfoRow(label = "Note", value = expense.note ?: "")
                 }
             }
         }
@@ -108,19 +115,13 @@ fun InfoRow(label: String, value: String) {
 fun ExpenseDetailScreenPreview() {
     MaterialTheme {
         ExpenseDetailScreen(
-            Expense(
-                name = "Netflix Subscription",
-                amount = 15.99,
-                priority = ExpensePriority.GOOD_TO_HAVE,
-                frequency = ExpenseFrequency.MONTHLY,
-                category = ExpenseCategory.ENTERTAINMENT,
-                customFrequencyInDays = null,
-                purchaseDate = LocalDate.of(2025, 5, 1),
-                brand = "Netflix",
-                provider = "Netflix Inc.",
-                linkToPurchase = "https://www.netflix.com",
-                nextPurchaseDate = LocalDate.of(2025, 6, 1),
-                note = "Monthly subscription for streaming service",
+            viewModel =
+            ExpenseDetailViewModel(
+                savedStateHandle = SavedStateHandle(mapOf("expenseId" to 1L)),
+                repository = BudgetRepositoryImpl(
+                    MockExpenseDao(),
+                    MockIncomeDao(),
+                ),
             ),
         )
     }
@@ -131,19 +132,13 @@ fun ExpenseDetailScreenPreview() {
 fun ExpenseDetailScreenPreviewDark() {
     MyBudgetTheme {
         ExpenseDetailScreen(
-            Expense(
-                name = "Netflix Subscription",
-                amount = 15.99,
-                priority = ExpensePriority.GOOD_TO_HAVE,
-                frequency = ExpenseFrequency.MONTHLY,
-                category = ExpenseCategory.ENTERTAINMENT,
-                customFrequencyInDays = null,
-                purchaseDate = LocalDate.of(2025, 5, 1),
-                brand = "Netflix",
-                provider = "Netflix Inc.",
-                linkToPurchase = "https://www.netflix.com",
-                nextPurchaseDate = LocalDate.of(2025, 6, 1),
-                note = "Monthly subscription for streaming service",
+            viewModel =
+            ExpenseDetailViewModel(
+                savedStateHandle = SavedStateHandle(mapOf("expenseId" to 1L)),
+                repository = BudgetRepositoryImpl(
+                    MockExpenseDao(),
+                    MockIncomeDao(),
+                ),
             ),
         )
     }

@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.mybudget.data.model.Expense
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExpenseDao {
@@ -16,4 +17,7 @@ interface ExpenseDao {
 
     @Query("SELECT * FROM expenses")
     suspend fun getAllExpenses(): List<Expense>
+
+    @Query("SELECT * FROM expenses WHERE id = :id")
+    fun getExpenseById(id: Long): Flow<Expense?>
 }

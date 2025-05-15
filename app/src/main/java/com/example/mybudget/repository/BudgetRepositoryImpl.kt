@@ -5,9 +5,11 @@ import com.example.mybudget.data.local.IncomeDao
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.Income
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 
 class BudgetRepositoryImpl(private val expenseDao: ExpenseDao, private val incomeDao: IncomeDao) :
     BudgetRepository {
@@ -48,6 +50,10 @@ class BudgetRepositoryImpl(private val expenseDao: ExpenseDao, private val incom
         _budgetData.value = _budgetData.value.copy(
             expenses = _budgetData.value.expenses + savedExpense,
         )
+    }
+
+    override fun getExpenseById(id: Long): Flow<Expense> {
+        return expenseDao.getExpenseById(id = id).filterNotNull()
     }
 
     override suspend fun removeExpense(expense: Expense) {

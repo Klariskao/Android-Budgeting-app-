@@ -1,8 +1,10 @@
 package com.example.mybudget.ui.screens
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -82,6 +84,7 @@ import com.example.mybudget.ui.helpers.formatCurrency
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
 import com.example.mybudget.ui.model.ExpensesSortOption
+import com.example.mybudget.ui.navigation.Screen
 import com.example.mybudget.ui.theme.Green40
 import com.example.mybudget.ui.theme.Green80
 import com.example.mybudget.ui.theme.MyBudgetTheme
@@ -189,6 +192,7 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                                 BudgetEvent.EditIncome(income),
                             )
                         },
+                        onClick = {},
                     )
                 }
             }
@@ -252,6 +256,9 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                             viewModel.onEvent(
                                 BudgetEvent.EditExpense(expense),
                             )
+                        },
+                        onClick = {
+                            navController.navigate(Screen.ExpenseDetail.createRoute(expense.id))
                         },
                     )
                 }
@@ -593,6 +600,7 @@ fun SwipeableIncomeExpenseItem(
     color: Color,
     onDelete: () -> Unit,
     onEdit: () -> Unit,
+    onClick: () -> Unit,
 ) {
     var itemHeight by remember { mutableIntStateOf(0) }
     val dismissState =
@@ -681,7 +689,8 @@ fun SwipeableIncomeExpenseItem(
                     modifier =
                     Modifier
                         .fillMaxWidth()
-                        .background(color),
+                        .background(color)
+                        .clickable { onClick() },
                     leadingContent = {
                         Icon(
                             icon,
