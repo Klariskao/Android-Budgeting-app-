@@ -32,7 +32,7 @@ enum class ExpensePriority(val label: String) {
 enum class ExpenseFrequency(val label: String) {
     DAILY("Daily"),
     WEEKLY("Weekly"),
-    BIWEEKLY("Biweekly"),
+    BI_WEEKLY("Bi-weekly"),
     MONTHLY("Monthly"),
     YEARLY("Yearly"),
     ONE_TIME("One time"),

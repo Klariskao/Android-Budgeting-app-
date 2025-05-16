@@ -82,13 +82,14 @@ import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.ExpenseCategory
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpensePriority
-import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
 import com.example.mybudget.ui.dialogs.EditExpenseDialog
 import com.example.mybudget.ui.dialogs.EditIncomeDialog
 import com.example.mybudget.ui.helpers.formatCurrency
+import com.example.mybudget.ui.helpers.toMonthlyAmount
+import com.example.mybudget.ui.helpers.toYearlyAmount
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
 import com.example.mybudget.ui.model.ExpensesSortOption
@@ -300,59 +301,56 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
 
 @Composable
 fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
-    val monthlyIncome =
-        budget.incomes
-            .filter { it.frequency == IncomeFrequency.MONTHLY }
-            .sumOf { it.amount }
-
+    val monthlyIncome = budget.incomes.sumOf { it.toMonthlyAmount() }
     val yearlyIncome =
-        budget.incomes
-            .filter { it.frequency == IncomeFrequency.YEARLY }
-            .sumOf { it.amount }
+        budget.incomes.sumOf { it.toYearlyAmount(customFrequencyInDays = it.customFrequencyInDays) }
 
-    val monthlyExpenses =
-        budget.expenses
-            .filter { it.frequency == ExpenseFrequency.MONTHLY }
-            .sumOf { it.amount }
-
+    val monthlyExpenses = budget.expenses.sumOf { it.toMonthlyAmount() }
     val yearlyExpenses =
-        budget.expenses
-            .filter { it.frequency == ExpenseFrequency.YEARLY }
-            .sumOf { it.amount }
+        budget.expenses.sumOf {
+            it.toYearlyAmount(customFrequencyInDays = it.customFrequencyInDays)
+        }
 
-    val totalIncome = budget.incomes.sumOf { it.amount }
-    val totalExpenses = budget.expenses.sumOf { it.amount }
-    val availableFunds = totalIncome - totalExpenses
+    val availableYearlyFunds = yearlyIncome - yearlyExpenses
+    val availableMonthlyFunds = monthlyIncome - monthlyExpenses
+
+    val progress = if (yearlyIncome > 0) {
+        (yearlyExpenses / yearlyIncome).toFloat().coerceIn(0f, 1f)
+    } else {
+        0f
+    }
 
     Card(
-        modifier =
-        modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Budget Summary", style = MaterialTheme.typography.titleMedium)
+            Text("Total Budget Summary", style = MaterialTheme.typography.titleMedium)
 
             Spacer(Modifier.height(12.dp))
 
-            SummaryRow("Total Income", totalIncome)
-            SummaryRow("Total Expenses", totalExpenses)
-            SummaryRow("Available Funds", availableFunds)
+            Text(
+                "Yearly Breakdown",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+
+            SummaryRow("Total Income", yearlyIncome)
+            SummaryRow("Total Expenses", yearlyExpenses)
+            SummaryRow("Available Funds", availableYearlyFunds)
 
             Spacer(Modifier.height(12.dp))
 
-            val progress = (totalExpenses / totalIncome).toFloat().coerceIn(0f, 1f)
             LinearProgressIndicator(
                 progress = { progress },
-                modifier =
-                Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(8.dp)),
-                color =
-                when {
+                color = when {
                     progress < 0.5f -> customGreen
                     progress == 1f -> MaterialTheme.colorScheme.error
                     else -> ProgressIndicatorDefaults.linearColor
@@ -362,22 +360,14 @@ fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(12.dp))
 
             Text(
-                "Income Breakdown",
+                "Monthly Breakdown",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
             )
-            SummaryRow("Monthly Income", monthlyIncome)
-            SummaryRow("Yearly Income", yearlyIncome)
 
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                "Expense Breakdown",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            SummaryRow("Monthly Expenses", monthlyExpenses)
-            SummaryRow("Yearly Expenses", yearlyExpenses)
+            SummaryRow("Average Income", monthlyIncome)
+            SummaryRow("Average Expenses", monthlyExpenses)
+            SummaryRow("Available Funds", availableMonthlyFunds)
         }
     }
 }

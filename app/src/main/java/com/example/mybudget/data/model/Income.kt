@@ -20,5 +20,5 @@ enum class IncomeFrequency(val label: String) {
     MONTHLY("Monthly"),
     YEARLY("Yearly"),
     ONE_TIME("One time"),
-    CUSTOM("Custom")
+    CUSTOM("Custom"),
 }
