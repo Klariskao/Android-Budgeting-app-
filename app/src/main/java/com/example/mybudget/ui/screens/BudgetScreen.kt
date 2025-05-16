@@ -1,8 +1,8 @@
 package com.example.mybudget.ui.screens
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
@@ -56,6 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -65,13 +69,17 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
 import com.example.mybudget.data.model.Budget
+import com.example.mybudget.data.model.Expense
+import com.example.mybudget.data.model.ExpenseCategory
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpensePriority
 import com.example.mybudget.data.model.IncomeFrequency
@@ -84,11 +92,13 @@ import com.example.mybudget.ui.helpers.formatCurrency
 import com.example.mybudget.ui.model.BudgetDialogState
 import com.example.mybudget.ui.model.BudgetEvent
 import com.example.mybudget.ui.model.ExpensesSortOption
+import com.example.mybudget.ui.model.ProgressSegment
 import com.example.mybudget.ui.navigation.Screen
 import com.example.mybudget.ui.theme.Green40
 import com.example.mybudget.ui.theme.Green80
 import com.example.mybudget.ui.theme.MyBudgetTheme
 import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
@@ -99,6 +109,16 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
     val dialogState = viewModel.dialogState
     var sortOption by remember { mutableStateOf(ExpensesSortOption.NONE) }
     var selectedExpensePriorities by remember { mutableStateOf(setOf<ExpensePriority>()) }
+
+    val graphColors =
+        listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.secondary,
+            MaterialTheme.colorScheme.tertiary,
+            MaterialTheme.colorScheme.error,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.outline,
+        )
 
     dialogState?.let { state ->
         when (state) {
@@ -179,7 +199,7 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                     SwipeableIncomeExpenseItem(
                         title = income.name,
                         amount = income.amount,
-                        subtitle = income.frequency.name,
+                        subtitle = income.frequency.label,
                         icon = Icons.Filled.AttachMoney,
                         color = Color(0xFF388E3C),
                         onDelete = {
@@ -215,6 +235,16 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                         selectedExpensePriorities.isEmpty() ||
                             selectedExpensePriorities.contains(it.priority)
                     }
+                val totalSpent = filteredExpenses.sumOf { it.amount }
+                val grouped = filteredExpenses.groupBy { it.category }
+
+                val segments = grouped.entries.mapIndexed { index, (_, expenses) ->
+                    val categoryTotal = expenses.sumOf { it.amount }
+                    ProgressSegment(
+                        fraction = (categoryTotal / totalSpent).toFloat(),
+                        color = graphColors[index % graphColors.size],
+                    )
+                }
 
                 item {
                     SortFilterBar(
@@ -234,7 +264,8 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                     Spacer(Modifier.height(12.dp))
 
                     ExpensePieChart(
-                        data = budget.expenses.map { it.category.name to it.amount.toFloat() },
+                        data = filteredExpenses.map { it.category.label to it.amount.toFloat() },
+                        pieColors = graphColors,
                     )
                 }
                 items(
@@ -244,7 +275,7 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                     SwipeableIncomeExpenseItem(
                         title = expense.name,
                         amount = expense.amount,
-                        subtitle = "${expense.frequency.name}, ${expense.priority.name}",
+                        subtitle = "${expense.frequency.label}, ${expense.priority.label}, ${expense.category.label}",
                         icon = Icons.Filled.MoneyOff,
                         color = Color(0xFFD32F2F),
                         onDelete = {
@@ -260,6 +291,14 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                         onClick = {
                             navController.navigate(Screen.ExpenseDetail.createRoute(expense.id))
                         },
+                    )
+                }
+
+                item {
+                    MultiSegmentLinearProgressBar(
+                        segments = segments,
+                        filteredExpenses = filteredExpenses,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
@@ -522,7 +561,7 @@ fun ExpenseTypeFilterBar(
             FilterChip(
                 selected = selectedTypes.contains(priority),
                 onClick = { onPriorityToggle(priority) },
-                label = { Text(priority.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                label = { Text(priority.label) },
                 modifier = Modifier.padding(vertical = 4.dp),
             )
         }
@@ -530,18 +569,12 @@ fun ExpenseTypeFilterBar(
 }
 
 @Composable
-fun ExpensePieChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifier) {
+fun ExpensePieChart(
+    data: List<Pair<String, Float>>,
+    pieColors: List<Color>,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
-
-    val pieColors =
-        listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.secondary,
-            MaterialTheme.colorScheme.tertiary,
-            MaterialTheme.colorScheme.error,
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.outline,
-        ).map { it.toArgb() }
     val labelColor = MaterialTheme.colorScheme.onBackground.toArgb()
     val holeColor = MaterialTheme.colorScheme.background.toArgb()
 
@@ -561,6 +594,7 @@ fun ExpensePieChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifi
                 setCenterTextSize(18f)
                 legend.isEnabled = true
                 legend.textColor = labelColor
+                legend.form = Legend.LegendForm.CIRCLE
                 setEntryLabelColor(labelColor)
                 setHoleColor(holeColor)
             }
@@ -573,7 +607,7 @@ fun ExpensePieChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifi
 
             val dataSet =
                 PieDataSet(entries, "").apply {
-                    colors = pieColors
+                    colors = pieColors.map { it.toArgb() }
                     sliceSpace = 3f
                     selectionShift = 5f
                 }
@@ -713,6 +747,59 @@ fun SwipeableIncomeExpenseItem(
     )
 }
 
+@Composable
+fun MultiSegmentLinearProgressBar(
+    segments: List<ProgressSegment>,
+    filteredExpenses: List<Expense>,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    height: Dp = 12.dp,
+    cornerRadius: Dp = 8.dp,
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+    ) {
+        Canvas(
+            modifier = modifier
+                .height(height)
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(backgroundColor),
+        ) {
+            var startX = 0f
+            val totalWidth = size.width
+
+            segments.forEach { segment ->
+                val width = segment.fraction.coerceIn(0f, 1f) * totalWidth
+                drawRect(
+                    color = segment.color,
+                    topLeft = Offset(x = startX, y = 0f),
+                    size = Size(width, size.height),
+                )
+                startX += width
+            }
+        }
+
+        // Legend for the progress bar
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            segments.forEachIndexed { index, segment ->
+                val category = filteredExpenses.groupBy { it.category }.keys.elementAt(index)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(segment.color, CircleShape),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = category.label,
+                        fontSize = 10.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
 val customGreen: Color
     @Composable
     get() = if (isSystemInDarkTheme()) Green80 else Green40
@@ -747,6 +834,81 @@ fun BudgetScreenPreviewDark() {
                 ),
             ),
             navController = rememberNavController(),
+        )
+    }
+}
+
+val mockData = listOf(
+    "Rent" to 40f,
+    "Food" to 30f,
+    "Transport" to 20f,
+    "Entertainment" to 10f,
+)
+
+val mockColors = listOf(
+    Color(0xFF4CAF50),
+    Color(0xFFFFC107),
+    Color(0xFF2196F3),
+    Color(0xFFE91E63),
+)
+
+@Preview(showBackground = true)
+@Composable
+fun ExpensePieChartPreview() {
+    MaterialTheme {
+        ExpensePieChart(
+            data = mockData,
+            pieColors = mockColors,
+            modifier = Modifier.padding(16.dp)
+                .background(MaterialTheme.colorScheme.background),
+        )
+    }
+}
+
+val mockExpenses = listOf(
+    Expense(
+        name = "Rent",
+        amount = 1000.0,
+        priority = ExpensePriority.REQUIRED,
+        frequency = ExpenseFrequency.MONTHLY,
+        category = ExpenseCategory.HOME,
+    ),
+    Expense(
+        name = "Food",
+        amount = 300.0,
+        priority = ExpensePriority.REQUIRED,
+        frequency = ExpenseFrequency.WEEKLY,
+        category = ExpenseCategory.FOOD,
+    ),
+    Expense(
+        name = "Transport",
+        amount = 50.0,
+        priority = ExpensePriority.LUXURY,
+        frequency = ExpenseFrequency.ONE_TIME,
+        category = ExpenseCategory.ENTERTAINMENT,
+    ),
+)
+
+val total = mockExpenses.sumOf { it.amount }
+
+val grouped = mockExpenses.groupBy { it.category }
+
+val segments = grouped.entries.mapIndexed { index, (_, expenses) ->
+    val categoryTotal = expenses.sumOf { it.amount }
+    ProgressSegment(
+        fraction = (categoryTotal / total).toFloat(),
+        color = mockColors[index % mockColors.size],
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MultiSegmentLinearProgressBarPreview() {
+    MaterialTheme {
+        MultiSegmentLinearProgressBar(
+            segments = segments,
+            filteredExpenses = mockExpenses,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

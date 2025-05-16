@@ -14,11 +14,11 @@ data class Income(
     val customFrequencyInDays: Int? = null,
 )
 
-enum class IncomeFrequency {
-    WEEKLY,
-    BI_WEEKLY,
-    MONTHLY,
-    YEARLY,
-    ONE_TIME,
-    CUSTOM,
+enum class IncomeFrequency(val label: String) {
+    WEEKLY("Weekly"),
+    BI_WEEKLY("Bi-weekly"),
+    MONTHLY("Monthly"),
+    YEARLY("Yearly"),
+    ONE_TIME("One time"),
+    CUSTOM("Custom")
 }
