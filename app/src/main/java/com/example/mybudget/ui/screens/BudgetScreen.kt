@@ -122,49 +122,41 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
 
     dialogState?.let { state ->
         when (state) {
-            is BudgetDialogState.ConfirmDeleteIncome -> {
-                DeleteConfirmationDialog(
-                    message = state.income.name,
-                    onConfirm = {
-                        viewModel.onEvent(BudgetEvent.RemoveIncome(state.income))
-                        viewModel.onEvent(BudgetEvent.CloseDialog)
-                    },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
-                )
-            }
+            is BudgetDialogState.ConfirmDeleteIncome -> DeleteConfirmationDialog(
+                name = state.income.name,
+                onConfirm = {
+                    viewModel.onEvent(BudgetEvent.RemoveIncome(state.income))
+                    viewModel.onEvent(BudgetEvent.CloseDialog)
+                },
+                onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
+            )
 
-            is BudgetDialogState.ConfirmDeleteExpense -> {
-                DeleteConfirmationDialog(
-                    message = state.expense.name,
-                    onConfirm = {
-                        viewModel.onEvent(BudgetEvent.RemoveExpense(state.expense))
-                        viewModel.onEvent(BudgetEvent.CloseDialog)
-                    },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
-                )
-            }
+            is BudgetDialogState.ConfirmDeleteExpense -> DeleteConfirmationDialog(
+                name = state.expense.name,
+                onConfirm = {
+                    viewModel.onEvent(BudgetEvent.RemoveExpense(state.expense))
+                    viewModel.onEvent(BudgetEvent.CloseDialog)
+                },
+                onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
+            )
 
-            is BudgetDialogState.EditIncome -> {
-                EditIncomeDialog(
-                    income = state.income,
-                    onSave = {
-                        viewModel.onEvent(BudgetEvent.UpdateIncome(it))
-                        viewModel.onEvent(BudgetEvent.CloseDialog)
-                    },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
-                )
-            }
+            is BudgetDialogState.EditIncome -> EditIncomeDialog(
+                income = state.income,
+                onSave = {
+                    viewModel.onEvent(BudgetEvent.UpdateIncome(it))
+                    viewModel.onEvent(BudgetEvent.CloseDialog)
+                },
+                onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
+            )
 
-            is BudgetDialogState.EditExpense -> {
-                EditExpenseDialog(
-                    expense = state.expense,
-                    onSave = {
-                        viewModel.onEvent(BudgetEvent.UpdateExpense(it))
-                        viewModel.onEvent(BudgetEvent.CloseDialog)
-                    },
-                    onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
-                )
-            }
+            is BudgetDialogState.EditExpense -> EditExpenseDialog(
+                expense = state.expense,
+                onSave = {
+                    viewModel.onEvent(BudgetEvent.UpdateExpense(it))
+                    viewModel.onEvent(BudgetEvent.CloseDialog)
+                },
+                onDismiss = { viewModel.onEvent(BudgetEvent.CloseDialog) },
+            )
         }
     }
 
@@ -859,7 +851,8 @@ fun ExpensePieChartPreview() {
         ExpensePieChart(
             data = mockData,
             pieColors = mockColors,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
                 .background(MaterialTheme.colorScheme.background),
         )
     }

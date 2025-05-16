@@ -12,10 +12,11 @@ interface BudgetRepository {
     suspend fun getBudget(): Budget
     suspend fun saveBudget(budget: Budget)
     suspend fun addExpense(expense: Expense)
-     fun getExpenseById(id: Long): Flow<Expense>
+    fun getExpenseById(id: Long): Flow<Expense>
     suspend fun removeExpense(expense: Expense)
     suspend fun loadBudgetFromDatabase()
     suspend fun saveBudgetToDatabase(budget: Budget)
     suspend fun addIncome(income: Income)
     suspend fun removeIncome(income: Income)
+    suspend fun updateExpense(expense: Expense)
 }

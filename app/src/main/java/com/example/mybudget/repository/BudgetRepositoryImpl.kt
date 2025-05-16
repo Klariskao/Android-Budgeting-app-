@@ -77,4 +77,8 @@ class BudgetRepositoryImpl(private val expenseDao: ExpenseDao, private val incom
 
         budget.expenses.forEach { expenseDao.insertExpense(it) }
     }
+
+    override suspend fun updateExpense(expense: Expense) {
+        expenseDao.updateExpense(expense)
+    }
 }

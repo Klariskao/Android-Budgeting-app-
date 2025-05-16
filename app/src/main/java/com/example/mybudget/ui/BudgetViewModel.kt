@@ -36,23 +36,24 @@ class BudgetViewModel(private val repository: BudgetRepository) : ViewModel() {
             is BudgetEvent.EditIncome -> dialogState = BudgetDialogState.EditIncome(event.income)
             is BudgetEvent.EditExpense -> dialogState = BudgetDialogState.EditExpense(event.expense)
             is BudgetEvent.ConfirmRemoveIncome ->
-                dialogState =
-                    BudgetDialogState.ConfirmDeleteIncome(event.income)
+                dialogState = BudgetDialogState.ConfirmDeleteIncome(event.income)
 
             is BudgetEvent.ConfirmRemoveExpense ->
-                dialogState =
-                    BudgetDialogState.ConfirmDeleteExpense(event.expense)
+                dialogState = BudgetDialogState.ConfirmDeleteExpense(event.expense)
 
             is BudgetEvent.AddIncome -> viewModelScope.launch { repository.addIncome(event.income) }
             is BudgetEvent.AddExpense -> viewModelScope.launch {
                 repository.addExpense(event.expense)
             }
+
             is BudgetEvent.RemoveIncome -> viewModelScope.launch {
                 repository.removeIncome(event.income)
             }
+
             is BudgetEvent.RemoveExpense -> viewModelScope.launch {
                 repository.removeExpense(event.expense)
             }
+
             is BudgetEvent.UpdateIncome -> updateIncome(event.income)
             is BudgetEvent.UpdateExpense -> updateExpense(event.expense)
             BudgetEvent.CloseDialog -> dialogState = null

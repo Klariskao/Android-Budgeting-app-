@@ -10,7 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.mybudget.ui.theme.MyBudgetTheme
 
 @Composable
-fun DeleteConfirmationDialog(message: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+fun DeleteConfirmationDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
         confirmButton = {
@@ -24,7 +24,7 @@ fun DeleteConfirmationDialog(message: String, onConfirm: () -> Unit, onDismiss: 
             }
         },
         title = { Text("Confirm Deletion") },
-        text = { Text("Are you sure you want to delete $message?") },
+        text = { Text("Are you sure you want to delete $name?") },
     )
 }
 
@@ -33,7 +33,7 @@ fun DeleteConfirmationDialog(message: String, onConfirm: () -> Unit, onDismiss: 
 fun DeleteConfirmationDialogPreview() {
     MaterialTheme {
         DeleteConfirmationDialog(
-            message = "Job",
+            name = "Job",
             onConfirm = {},
             onDismiss = {},
         )
@@ -45,7 +45,7 @@ fun DeleteConfirmationDialogPreview() {
 fun DeleteConfirmationDialogPreviewDark() {
     MyBudgetTheme {
         DeleteConfirmationDialog(
-            message = "Job",
+            name = "Job",
             onConfirm = {},
             onDismiss = {},
         )

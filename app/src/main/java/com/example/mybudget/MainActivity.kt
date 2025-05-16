@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                         val viewModel: ExpenseDetailViewModel = koinViewModel(
                             viewModelStoreOwner = backStackEntry,
                         )
-                        ExpenseDetailScreen(viewModel = viewModel)
+                        ExpenseDetailScreen(viewModel = viewModel, navController)
                     }
                 }
             }
