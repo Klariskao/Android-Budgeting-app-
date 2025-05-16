@@ -22,7 +22,6 @@ class MockExpenseDao : ExpenseDao {
             brand = "Netflix",
             provider = "Netflix Inc.",
             linkToPurchase = "https://www.netflix.com",
-            nextPurchaseDate = LocalDate.of(2025, 6, 1),
             note = "Monthly subscription for streaming service",
         ),
         Expense(

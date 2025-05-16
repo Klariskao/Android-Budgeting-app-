@@ -42,6 +42,7 @@ import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.ExpenseDetailViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
 import com.example.mybudget.ui.dialogs.EditExpenseDialog
+import com.example.mybudget.ui.helpers.calculateNextPurchaseDate
 import com.example.mybudget.ui.helpers.formatCurrency
 import com.example.mybudget.ui.model.ExpenseDetailEvent
 import com.example.mybudget.ui.theme.MyBudgetTheme
@@ -99,8 +100,20 @@ fun ExpenseDetailScreen(viewModel: ExpenseDetailViewModel, navController: NavCon
                         )
                     }
                     InfoRow(label = "Purchase Date", value = safeExpense.purchaseDate.toString())
-                    InfoRow(label = "Next Purchase", value = safeExpense.nextPurchaseDate.toString())
-                    if (safeExpense.brand.isNotBlank()) {
+                    val nextPurchaseDate = calculateNextPurchaseDate(
+                        safeExpense.purchaseDate,
+                        safeExpense.frequency,
+                        safeExpense.customFrequencyInDays,
+                        safeExpense.repetitions,
+                        safeExpense.endDate,
+                    )
+                    if (nextPurchaseDate != null) {
+                        InfoRow(
+                            label = "Next Purchase",
+                            value = nextPurchaseDate.toString()
+                        )
+                    }
+                        if (safeExpense.brand.isNotBlank()) {
                         InfoRow(label = "Brand", value = safeExpense.brand)
                     }
                     if (safeExpense.provider.isNotBlank()) {

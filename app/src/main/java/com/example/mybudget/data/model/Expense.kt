@@ -17,8 +17,9 @@ data class Expense(
     val brand: String = "",
     val provider: String = "",
     val linkToPurchase: String = "",
-    val nextPurchaseDate: LocalDate = LocalDate.now(),
     val note: String? = null,
+    val repetitions: Int? = null, // Number of total repetitions, null means infinite
+    val endDate: LocalDate? = null, // Optional end date for recurrence
 )
 
 enum class ExpensePriority(val label: String) {

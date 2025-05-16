@@ -9,11 +9,17 @@ sealed class AddExpenseEvent {
     data class AddExpense(
         val name: String,
         val amount: String,
-        val type: ExpensePriority,
+        val priority: ExpensePriority,
         val frequency: ExpenseFrequency,
         val category: ExpenseCategory,
-        val customFrequencyInDays: Int? = null,
+        val customFrequencyInDays: Int?,
         val purchaseDate: LocalDate,
+        val brand: String,
+        val provider: String,
+        val linkToPurchase: String,
+        val note: String,
+        val repetitions: Int?,
+        val endDate: LocalDate?,
     ) : AddExpenseEvent()
 
     data object ExpenseAdded : AddExpenseEvent()

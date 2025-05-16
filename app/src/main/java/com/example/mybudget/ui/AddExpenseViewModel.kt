@@ -32,11 +32,17 @@ class AddExpenseViewModel(private val repository: BudgetRepository) : ViewModel(
                 val expense = Expense(
                     name = event.name,
                     amount = event.amount.toDouble(),
-                    priority = event.type,
+                    priority = event.priority,
                     frequency = event.frequency,
                     category = event.category,
                     customFrequencyInDays = event.customFrequencyInDays,
                     purchaseDate = event.purchaseDate,
+                    brand = event.brand,
+                    provider = event.provider,
+                    linkToPurchase = event.linkToPurchase,
+                    note = event.note,
+                    repetitions = event.repetitions,
+                    endDate = event.endDate,
                 )
 
                 viewModelScope.launch {
