@@ -205,7 +205,10 @@ fun AddExpenseScreen(viewModel: AddExpenseViewModel, navController: NavControlle
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = showRepetitions,
-                    onCheckedChange = { showRepetitions = it },
+                    onCheckedChange = {
+                        showRepetitions = it
+                        showEndDate = false
+                    },
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(text = "Add number of repetitions", color = MaterialTheme.colorScheme.primary)
@@ -227,7 +230,10 @@ fun AddExpenseScreen(viewModel: AddExpenseViewModel, navController: NavControlle
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = showEndDate,
-                    onCheckedChange = { showEndDate = it },
+                    onCheckedChange = {
+                        showEndDate = it
+                        showRepetitions = false
+                    },
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(text = "Add end date", color = MaterialTheme.colorScheme.primary)
