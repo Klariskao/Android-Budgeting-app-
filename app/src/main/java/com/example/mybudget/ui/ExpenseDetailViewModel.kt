@@ -25,7 +25,6 @@ class ExpenseDetailViewModel(
 
     val expenseFlow: Flow<Expense> = repository.getExpenseById(expenseId)
 
-
     init {
         Log.d("ExpenseDetailVM", "expenseId = $expenseId")
     }

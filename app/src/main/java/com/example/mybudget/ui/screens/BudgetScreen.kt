@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Delete
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -40,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
@@ -82,12 +85,16 @@ import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.ExpenseCategory
 import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpensePriority
+import com.example.mybudget.data.model.Income
+import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
 import com.example.mybudget.ui.dialogs.EditExpenseDialog
 import com.example.mybudget.ui.dialogs.EditIncomeDialog
 import com.example.mybudget.ui.helpers.formatCurrency
+import com.example.mybudget.ui.helpers.getExpenseOccurrencesInPeriod
+import com.example.mybudget.ui.helpers.getIncomeOccurrencesInPeriod
 import com.example.mybudget.ui.helpers.toMonthlyAmount
 import com.example.mybudget.ui.helpers.toYearlyAmount
 import com.example.mybudget.ui.model.BudgetDialogState
@@ -103,6 +110,8 @@ import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
@@ -293,6 +302,8 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
                         filteredExpenses = filteredExpenses,
                         modifier = Modifier.fillMaxWidth(),
                     )
+
+                    BudgetPeriodOverview(incomes = budget.incomes, expenses = filteredExpenses)
                 }
             }
         }
@@ -782,6 +793,108 @@ fun MultiSegmentLinearProgressBar(
     }
 }
 
+@Composable
+fun BudgetPeriodOverview(incomes: List<Income>, expenses: List<Expense>) {
+    val currentMonth = YearMonth.now()
+    val months = remember {
+        (0..11).map { currentMonth.plusMonths(it.toLong()) }
+    }
+    var selectedMonth by remember { mutableStateOf<YearMonth?>(currentMonth) }
+    var expanded by remember { mutableStateOf(false) }
+
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy") }
+
+    val totalExpenses = expenses.sumOf { expense ->
+        getExpenseOccurrencesInPeriod(expense, selectedMonth).size * expense.amount
+    }
+
+    val totalIncome = incomes.sumOf { income ->
+        getIncomeOccurrencesInPeriod(income, selectedMonth).size * income.amount
+    }
+    val availableFunds = totalIncome - totalExpenses
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Budget Overview", style = MaterialTheme.typography.titleMedium)
+
+            Box {
+                OutlinedButton(
+                    onClick = { expanded = true },
+                ) {
+                    Text(
+                        text = selectedMonth?.format(dateFormatter) ?: "Full Year",
+                    )
+                }
+
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    months.forEach { month ->
+                        DropdownMenuItem(
+                            text = { Text(month.format(dateFormatter)) },
+                            onClick = {
+                                selectedMonth = month
+                                expanded = false
+                            },
+                        )
+                    }
+                    Divider()
+                    DropdownMenuItem(
+                        text = { Text("Full Year") },
+                        onClick = {
+                            selectedMonth = null
+                            expanded = false
+                        },
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                SummaryRow("Total Income", totalIncome)
+                SummaryRow("Total Expenses", totalExpenses)
+                SummaryRow("Available Funds", availableFunds)
+
+                Spacer(Modifier.height(8.dp))
+
+                val progress = if (totalIncome > 0.0) {
+                    (totalExpenses / totalIncome).toFloat()
+                        .coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = when {
+                        progress < 0.5f -> customGreen
+                        progress == 1f -> MaterialTheme.colorScheme.error
+                        else -> ProgressIndicatorDefaults.linearColor
+                    },
+                )
+            }
+        }
+    }
+}
+
 val customGreen: Color
     @Composable
     get() = if (isSystemInDarkTheme()) Green80 else Green40
@@ -892,6 +1005,23 @@ fun MultiSegmentLinearProgressBarPreview() {
             segments = segments,
             filteredExpenses = mockExpenses,
             modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BudgetPeriodOverviewPreview() {
+    MaterialTheme {
+        BudgetPeriodOverview(
+            incomes = listOf(
+                Income(
+                    name = "Job",
+                    amount = 2500.0,
+                    frequency = IncomeFrequency.MONTHLY,
+                ),
+            ),
+            expenses = mockExpenses,
         )
     }
 }

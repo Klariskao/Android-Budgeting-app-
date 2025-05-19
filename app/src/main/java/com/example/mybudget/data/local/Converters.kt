@@ -33,8 +33,8 @@ class Converters {
     fun toIncomeFrequency(value: String): IncomeFrequency = IncomeFrequency.valueOf(value)
 
     @TypeConverter
-    fun fromLocalDate(date: LocalDate): String = date.toString()
+    fun fromLocalDate(date: LocalDate?): String? = date?.toString()
 
     @TypeConverter
-    fun toLocalDate(value: String): LocalDate = LocalDate.parse(value)
+    fun toLocalDate(value: String?): LocalDate? = value?.let { LocalDate.parse(it) }
 }

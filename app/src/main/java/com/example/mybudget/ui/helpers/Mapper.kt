@@ -5,6 +5,7 @@ import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.Income
 import com.example.mybudget.data.model.IncomeFrequency
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
 // Calculate the next purchase date based on frequency, repetitions, and endDate
@@ -120,4 +121,69 @@ fun Expense.toYearlyAmount(customFrequencyInDays: Int?): Double = when (frequenc
     ExpenseFrequency.YEARLY -> amount
     ExpenseFrequency.ONE_TIME -> amount
     ExpenseFrequency.CUSTOM -> amount * (365 / (customFrequencyInDays ?: 365))
+}
+
+fun getExpenseOccurrencesInPeriod(expense: Expense, month: YearMonth?): List<LocalDate> {
+    val dates = mutableListOf<LocalDate>()
+    val start = expense.purchaseDate
+    val end = expense.endDate ?: start.plusYears(1)
+
+    val daysBetween = when (expense.frequency) {
+        ExpenseFrequency.DAILY -> 1
+        ExpenseFrequency.WEEKLY -> 7
+        ExpenseFrequency.BI_WEEKLY -> 14
+        ExpenseFrequency.MONTHLY -> 30
+        ExpenseFrequency.YEARLY -> 365
+        ExpenseFrequency.ONE_TIME -> null
+        ExpenseFrequency.CUSTOM -> expense.customFrequencyInDays
+    } ?: return listOf(start)
+
+    var current = start
+    var count = 0
+    while (current <= end && (expense.repetitions == null || count < expense.repetitions)) {
+        if (
+            (month != null && YearMonth.from(current) == month) ||
+            (
+                month == null &&
+                    current in YearMonth.now().atDay(1)..YearMonth.now().plusMonths(11)
+                        .atEndOfMonth()
+                )
+        ) {
+            dates.add(current)
+        }
+        current = current.plusDays(daysBetween.toLong())
+        count++
+    }
+    return dates
+}
+
+fun getIncomeOccurrencesInPeriod(income: Income, month: YearMonth?): List<LocalDate> {
+    val dates = mutableListOf<LocalDate>()
+    val start = income.firstPaymentDate
+    val end = start.plusYears(1)
+
+    val daysBetween = when (income.frequency) {
+        IncomeFrequency.WEEKLY -> 7
+        IncomeFrequency.BI_WEEKLY -> 14
+        IncomeFrequency.MONTHLY -> 30
+        IncomeFrequency.YEARLY -> 365
+        IncomeFrequency.ONE_TIME -> null
+        IncomeFrequency.CUSTOM -> income.customFrequencyInDays
+    } ?: return listOf(start)
+
+    var current = start
+    while (current <= end) {
+        if (
+            (month != null && YearMonth.from(current) == month) ||
+            (
+                month == null &&
+                    current in YearMonth.now().atDay(1)..YearMonth.now().plusMonths(11)
+                        .atEndOfMonth()
+                )
+        ) {
+            dates.add(current)
+        }
+        current = current.plusDays(daysBetween.toLong())
+    }
+    return dates
 }
