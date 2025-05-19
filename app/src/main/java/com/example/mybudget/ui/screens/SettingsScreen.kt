@@ -33,6 +33,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mybudget.data.local.SettingsDataStore
+import com.example.mybudget.data.util.CsvExporter.exportToInternalStorage
+import com.example.mybudget.ui.SharedBudgetViewModel
 import com.example.mybudget.ui.theme.MyBudgetTheme
 import kotlinx.coroutines.launch
 import org.koin.compose.getKoin
@@ -46,6 +48,9 @@ fun SettingsScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var notificationsEnabled by remember { mutableStateOf(true) }
+
+    val sharedBudgetViewModel: SharedBudgetViewModel = getKoin().get()
+    val budget by sharedBudgetViewModel.budget.collectAsState()
 
     Column(
         modifier = Modifier
@@ -114,8 +119,14 @@ fun SettingsScreen() {
         ) {
             Button(
                 onClick = {
-                    // TODO: Perform export
-                    Toast.makeText(context, "Export started", Toast.LENGTH_SHORT).show()
+                    scope.launch {
+                        val file = exportToInternalStorage(context, budget.incomes, budget.expenses)
+                        Toast.makeText(
+                            context,
+                            file?.let { "Exported to ${it.absolutePath}" } ?: "Export failed",
+                            Toast.LENGTH_LONG,
+                        ).show()
+                    }
                 },
             ) {
                 Text("Export Data")

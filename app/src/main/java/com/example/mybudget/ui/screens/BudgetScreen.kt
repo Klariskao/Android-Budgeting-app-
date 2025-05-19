@@ -51,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -88,6 +89,7 @@ import com.example.mybudget.data.model.Income
 import com.example.mybudget.data.model.IncomeFrequency
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
+import com.example.mybudget.ui.SharedBudgetViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
 import com.example.mybudget.ui.dialogs.EditExpenseDialog
 import com.example.mybudget.ui.dialogs.EditIncomeDialog
@@ -347,7 +349,7 @@ fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Mo
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("Total Budget Summary", style = MaterialTheme.typography.titleMedium)
-                ExportButton(navController = navController)
+                ExportButton(budget = budget, navController = navController)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -393,7 +395,11 @@ fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Mo
 }
 
 @Composable
-fun ExportButton(navController: NavController) {
+fun ExportButton(budget: Budget, navController: NavController) {
+    val sharedBudgetViewModel: SharedBudgetViewModel = getKoin().get()
+    LaunchedEffect(budget) {
+        sharedBudgetViewModel.setBudget(budget)
+    }
     IconButton(
         onClick = { navController.navigate(Screen.Settings.route) },
     ) {

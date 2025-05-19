@@ -17,6 +17,7 @@ import com.example.mybudget.ui.AddExpenseViewModel
 import com.example.mybudget.ui.AddIncomeViewModel
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.ExpenseDetailViewModel
+import com.example.mybudget.ui.SharedBudgetViewModel
 import com.example.mybudget.ui.ThemeViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -52,4 +53,5 @@ val appModule = module {
     }
 
     viewModel { ThemeViewModel(get()) }
+    viewModel { SharedBudgetViewModel() }
 }
