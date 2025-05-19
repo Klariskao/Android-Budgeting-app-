@@ -78,6 +78,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
+import com.example.mybudget.data.local.SettingsDataStore
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.ExpenseCategory
@@ -108,6 +109,7 @@ import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import org.koin.compose.getKoin
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
@@ -401,6 +403,8 @@ fun ExportButton(navController: NavController) {
 
 @Composable
 fun SummaryRow(label: String, amount: Double) {
+    val settingsDataStore: SettingsDataStore = getKoin().get()
+    val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
     Row(
         modifier =
         Modifier
@@ -409,7 +413,7 @@ fun SummaryRow(label: String, amount: Double) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label)
-        Text(formatCurrency(amount), fontWeight = FontWeight.Medium)
+        Text(formatCurrency(amount, currency), fontWeight = FontWeight.Medium)
     }
 }
 
@@ -630,24 +634,25 @@ fun SwipeableIncomeExpenseItem(
     onClick: () -> Unit,
 ) {
     var itemHeight by remember { mutableIntStateOf(0) }
-    val dismissState =
-        rememberSwipeToDismissBoxState(
-            confirmValueChange = { value ->
-                when (value) {
-                    SwipeToDismissBoxValue.StartToEnd -> {
-                        onEdit()
-                        false // Don't auto-dismiss on edit
-                    }
-
-                    SwipeToDismissBoxValue.EndToStart -> {
-                        onDelete()
-                        false // Don't auto-dismiss on delete
-                    }
-
-                    SwipeToDismissBoxValue.Settled -> false
+    val settingsDataStore: SettingsDataStore = getKoin().get()
+    val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onEdit()
+                    false // Don't auto-dismiss on edit
                 }
-            },
-        )
+
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    false // Don't auto-dismiss on delete
+                }
+
+                SwipeToDismissBoxValue.Settled -> false
+            }
+        },
+    )
 
     SwipeToDismissBox(
         state = dismissState,
@@ -655,26 +660,23 @@ fun SwipeableIncomeExpenseItem(
             val direction = dismissState.dismissDirection
             val isStartToEnd = direction == SwipeToDismissBoxValue.StartToEnd
 
-            val backgroundColor =
-                when (direction) {
-                    SwipeToDismissBoxValue.StartToEnd -> Color(0xFFB9F6CA) // light green
-                    SwipeToDismissBoxValue.EndToStart -> Color(0xFFFFCDD2) // light red
-                    else -> Color.Transparent
-                }
+            val backgroundColor = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Color(0xFFB9F6CA) // light green
+                SwipeToDismissBoxValue.EndToStart -> Color(0xFFFFCDD2) // light red
+                else -> Color.Transparent
+            }
 
-            val icon =
-                when (direction) {
-                    SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
-                    SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
-                    else -> null
-                }
+            val icon = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                else -> null
+            }
 
-            val label =
-                when (direction) {
-                    SwipeToDismissBoxValue.StartToEnd -> "Edit"
-                    SwipeToDismissBoxValue.EndToStart -> "Delete"
-                    else -> ""
-                }
+            val label = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> "Edit"
+                SwipeToDismissBoxValue.EndToStart -> "Delete"
+                else -> ""
+            }
 
             if (icon != null) {
                 Box(
@@ -729,7 +731,7 @@ fun SwipeableIncomeExpenseItem(
                     supportingContent = { Text(subtitle) },
                     trailingContent = {
                         Text(
-                            formatCurrency(amount),
+                            formatCurrency(amount, currency),
                             fontWeight = FontWeight.Medium,
                             color = Color.DarkGray,
                         )
@@ -919,7 +921,7 @@ fun BudgetScreenPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun BudgetScreenPreviewDark() {
-    MyBudgetTheme {
+    MyBudgetTheme(isDarkTheme = true) {
         BudgetScreen(
             viewModel =
             BudgetViewModel(

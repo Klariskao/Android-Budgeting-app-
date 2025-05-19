@@ -216,7 +216,7 @@ fun AddIncomeScreenPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun AddIncomeScreenPreviewDark() {
-    MyBudgetTheme {
+    MyBudgetTheme(isDarkTheme = true) {
         AddIncomeScreen(
             viewModel = AddIncomeViewModel(BudgetRepositoryImpl(MockExpenseDao(), MockIncomeDao())),
             navController = rememberNavController(),

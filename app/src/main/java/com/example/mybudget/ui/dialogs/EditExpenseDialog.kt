@@ -252,7 +252,7 @@ fun EditExpensePreviewDialog() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun EditExpenseDialogPreviewDark() {
-    MyBudgetTheme {
+    MyBudgetTheme(isDarkTheme = true) {
         EditExpenseDialog(
             expense = Expense(
                 name = "Rent",

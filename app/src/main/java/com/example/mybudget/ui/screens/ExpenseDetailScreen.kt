@@ -1,7 +1,6 @@
 package com.example.mybudget.ui.screens
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -87,7 +86,7 @@ fun ExpenseDetailScreen(viewModel: ExpenseDetailViewModel, navController: NavCon
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    InfoRow(label = "Amount", value = formatCurrency(safeExpense.amount))
+                    InfoRow(label = "Amount", value = formatCurrency(safeExpense.amount, ""))
                     InfoRow(label = "Category", value = safeExpense.category.label)
                     InfoRow(label = "Priority", value = safeExpense.priority.label)
                     InfoRow(label = "Frequency", value = safeExpense.frequency.label)
@@ -216,7 +215,7 @@ fun ExpenseDetailScreenPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ExpenseDetailScreenPreviewDark() {
-    MyBudgetTheme {
+    MyBudgetTheme(isDarkTheme = true) {
         ExpenseDetailScreen(
             viewModel =
             ExpenseDetailViewModel(

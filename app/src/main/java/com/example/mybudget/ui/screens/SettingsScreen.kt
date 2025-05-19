@@ -21,23 +21,31 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.mybudget.data.local.SettingsDataStore
 import com.example.mybudget.ui.theme.MyBudgetTheme
+import kotlinx.coroutines.launch
+import org.koin.compose.getKoin
 
 @Composable
 fun SettingsScreen() {
+    val settingsDataStore: SettingsDataStore = getKoin().get()
+
+    val isDarkTheme by settingsDataStore.darkThemeFlow.collectAsState(initial = false)
+    val selectedCurrency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
     val context = LocalContext.current
-    var isDarkTheme by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     var notificationsEnabled by remember { mutableStateOf(true) }
-    var selectedCurrency by remember { mutableStateOf("USD") }
 
     Column(
         modifier = Modifier
@@ -61,7 +69,9 @@ fun SettingsScreen() {
             Text("Dark Theme", Modifier.weight(1f), color = MaterialTheme.colorScheme.primary)
             Switch(
                 checked = isDarkTheme,
-                onCheckedChange = { isDarkTheme = it },
+                onCheckedChange = {
+                    scope.launch { settingsDataStore.setDarkTheme(it) }
+                },
             )
         }
 
@@ -87,7 +97,9 @@ fun SettingsScreen() {
             Text("Currency", Modifier.weight(1f), color = MaterialTheme.colorScheme.primary)
             DropdownMenuCurrencySelector(
                 selected = selectedCurrency,
-                onCurrencySelected = { selectedCurrency = it },
+                onCurrencySelected = {
+                    scope.launch { settingsDataStore.setCurrency(it) }
+                },
             )
         }
 
@@ -124,7 +136,7 @@ fun SettingsScreen() {
 @Composable
 fun DropdownMenuCurrencySelector(selected: String, onCurrencySelected: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val currencies = listOf("USD", "EUR", "GBP", "JPY", "Local")
+    val currencies = listOf("USD", "EUR", "GBP", "JPY")
 
     Box {
         OutlinedButton(onClick = { expanded = true }) {
@@ -155,7 +167,7 @@ fun SettingsScreenPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun SettingsScreenPreviewDark() {
-    MyBudgetTheme {
+    MyBudgetTheme(isDarkTheme = true) {
         SettingsScreen()
     }
 }

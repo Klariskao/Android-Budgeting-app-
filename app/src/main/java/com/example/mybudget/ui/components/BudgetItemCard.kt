@@ -11,13 +11,19 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.mybudget.data.local.SettingsDataStore
 import com.example.mybudget.ui.helpers.formatCurrency
+import org.koin.compose.getKoin
 
 @Composable
 fun BudgetItemCard(title: String, amount: Double, subtitle: String) {
+    val settingsDataStore: SettingsDataStore = getKoin().get()
+    val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -30,7 +36,7 @@ fun BudgetItemCard(title: String, amount: Double, subtitle: String) {
             Spacer(Modifier.height(4.dp))
             Text(subtitle, style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(4.dp))
-            Text(formatCurrency(amount), style = MaterialTheme.typography.bodyLarge)
+            Text(formatCurrency(amount, currency), style = MaterialTheme.typography.bodyLarge)
         }
     }
 }

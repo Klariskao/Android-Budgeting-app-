@@ -43,7 +43,7 @@ fun DeleteConfirmationDialogPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun DeleteConfirmationDialogPreviewDark() {
-    MyBudgetTheme {
+    MyBudgetTheme(isDarkTheme = true) {
         DeleteConfirmationDialog(
             name = "Job",
             onConfirm = {},
