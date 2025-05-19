@@ -1,6 +1,8 @@
 package com.example.mybudget.ui.screens
 
+import android.content.Context
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoneyOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -83,6 +86,7 @@ import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpensePriority
 import com.example.mybudget.data.model.Income
 import com.example.mybudget.data.model.IncomeFrequency
+import com.example.mybudget.data.util.CsvExporter
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
@@ -335,7 +339,13 @@ fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Total Budget Summary", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text("Total Budget Summary", style = MaterialTheme.typography.titleMedium)
+                ExportButton(LocalContext.current, budget.incomes, budget.expenses)
+            }
 
             Spacer(Modifier.height(12.dp))
 
@@ -376,6 +386,25 @@ fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
             SummaryRow("Average Expenses", monthlyExpenses)
             SummaryRow("Available Funds", availableMonthlyFunds)
         }
+    }
+}
+
+@Composable
+fun ExportButton(context: Context, incomes: List<Income>, expenses: List<Expense>) {
+    Button(
+        onClick = {
+            val file = CsvExporter.exportToInternalStorage(context, incomes, expenses)
+            Toast.makeText(
+                context,
+                file?.let { "Exported to ${it.absolutePath}" } ?: "Export failed",
+                Toast.LENGTH_LONG,
+            ).show()
+        },
+        modifier = Modifier
+            .wrapContentWidth()
+            .height(40.dp),
+    ) {
+        Text("Export Data")
     }
 }
 
