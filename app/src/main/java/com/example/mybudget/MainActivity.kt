@@ -19,6 +19,7 @@ import com.example.mybudget.ui.screens.AddExpenseScreen
 import com.example.mybudget.ui.screens.AddIncomeScreen
 import com.example.mybudget.ui.screens.BudgetScreen
 import com.example.mybudget.ui.screens.ExpenseDetailScreen
+import com.example.mybudget.ui.screens.SettingsScreen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -58,6 +59,9 @@ class MainActivity : ComponentActivity() {
                             viewModelStoreOwner = backStackEntry,
                         )
                         ExpenseDetailScreen(viewModel = viewModel, navController)
+                    }
+                    composable(Screen.Settings.route) {
+                        SettingsScreen()
                     }
                 }
             }

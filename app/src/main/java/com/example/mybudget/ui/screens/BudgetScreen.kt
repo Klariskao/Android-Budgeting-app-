@@ -1,8 +1,6 @@
 package com.example.mybudget.ui.screens
 
-import android.content.Context
 import android.content.res.Configuration
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -31,7 +29,7 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoneyOff
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,6 +38,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -86,7 +85,6 @@ import com.example.mybudget.data.model.ExpenseFrequency
 import com.example.mybudget.data.model.ExpensePriority
 import com.example.mybudget.data.model.Income
 import com.example.mybudget.data.model.IncomeFrequency
-import com.example.mybudget.data.util.CsvExporter
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.BudgetViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
@@ -120,15 +118,14 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
     var sortOption by remember { mutableStateOf(ExpensesSortOption.NONE) }
     var selectedExpensePriorities by remember { mutableStateOf(setOf<ExpensePriority>()) }
 
-    val graphColors =
-        listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.secondary,
-            MaterialTheme.colorScheme.tertiary,
-            MaterialTheme.colorScheme.error,
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.outline,
-        )
+    val graphColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.error,
+        MaterialTheme.colorScheme.surfaceVariant,
+        MaterialTheme.colorScheme.outline,
+    )
 
     dialogState?.let { state ->
         when (state) {
@@ -172,15 +169,14 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
 
     Scaffold { padding ->
         LazyColumn(
-            modifier =
-            Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                BudgetSummaryCard(budget)
+                BudgetSummaryCard(budget, navController)
             }
 
             item {
@@ -311,7 +307,7 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
 }
 
 @Composable
-fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
+fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Modifier = Modifier) {
     val monthlyIncome = budget.incomes.sumOf { it.toMonthlyAmount() }
     val yearlyIncome =
         budget.incomes.sumOf { it.toYearlyAmount(customFrequencyInDays = it.customFrequencyInDays) }
@@ -338,13 +334,18 @@ fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp, bottom = 16.dp),
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("Total Budget Summary", style = MaterialTheme.typography.titleMedium)
-                ExportButton(LocalContext.current, budget.incomes, budget.expenses)
+                ExportButton(navController = navController)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -390,21 +391,11 @@ fun BudgetSummaryCard(budget: Budget, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ExportButton(context: Context, incomes: List<Income>, expenses: List<Expense>) {
-    Button(
-        onClick = {
-            val file = CsvExporter.exportToInternalStorage(context, incomes, expenses)
-            Toast.makeText(
-                context,
-                file?.let { "Exported to ${it.absolutePath}" } ?: "Export failed",
-                Toast.LENGTH_LONG,
-            ).show()
-        },
-        modifier = Modifier
-            .wrapContentWidth()
-            .height(40.dp),
+fun ExportButton(navController: NavController) {
+    IconButton(
+        onClick = { navController.navigate(Screen.Settings.route) },
     ) {
-        Text("Export Data")
+        Icon(Icons.Default.Settings, contentDescription = "Settings")
     }
 }
 
@@ -853,7 +844,7 @@ fun BudgetPeriodOverview(incomes: List<Income>, expenses: List<Expense>) {
                             },
                         )
                     }
-                    Divider()
+                    Divider(color = MaterialTheme.colorScheme.surfaceVariant)
                     DropdownMenuItem(
                         text = { Text("Full Year") },
                         onClick = {
