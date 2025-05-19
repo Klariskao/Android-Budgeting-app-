@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -35,15 +35,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
@@ -70,7 +67,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -493,40 +489,24 @@ fun SortFilterBar(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SortDropdown(selectedSort: ExpensesSortOption, onSortChange: (ExpensesSortOption) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val textStyle =
-        MaterialTheme.typography.bodySmall.copy(
-            textAlign = TextAlign.Center,
-        )
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-    ) {
-        OutlinedTextField(
-            value = selectedSort.label,
-            onValueChange = {},
-            readOnly = true,
-            textStyle = textStyle,
-            modifier =
-            Modifier
-                .menuAnchor()
-                .height(48.dp)
-                .widthIn(max = 160.dp),
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-            shape = RoundedCornerShape(12.dp),
-        )
 
-        ExposedDropdownMenu(
+    Box(modifier = Modifier.wrapContentWidth()) {
+        OutlinedButton(
+            onClick = { expanded = true },
+        ) {
+            Text(text = selectedSort.label)
+        }
+
+        DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
             ExpensesSortOption.entries.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option.name) },
+                    text = { Text(option.label) },
                     onClick = {
                         onSortChange(option)
                         expanded = false
