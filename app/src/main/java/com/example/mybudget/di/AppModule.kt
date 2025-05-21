@@ -10,7 +10,7 @@ import androidx.room.Room
 import com.example.mybudget.data.local.BudgetDatabase
 import com.example.mybudget.data.local.ExpenseDao
 import com.example.mybudget.data.local.IncomeDao
-import com.example.mybudget.data.local.SettingsDataStore
+import com.example.mybudget.data.local.SettingsDataStoreImpl
 import com.example.mybudget.repository.BudgetRepository
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.AddExpenseViewModel
@@ -43,7 +43,7 @@ val appModule = module {
         )
     }
 
-    single { SettingsDataStore(get()) }
+    single { SettingsDataStoreImpl(get()) }
 
     viewModel { BudgetViewModel(get()) }
     viewModel { AddExpenseViewModel(get()) }
@@ -53,5 +53,5 @@ val appModule = module {
     }
 
     viewModel { ThemeViewModel(get()) }
-    viewModel { SharedBudgetViewModel() }
+    single { SharedBudgetViewModel() }
 }

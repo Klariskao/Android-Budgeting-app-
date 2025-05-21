@@ -23,4 +23,6 @@ class MockIncomeDao : IncomeDao {
     }
 
     override suspend fun getAllIncomes(): List<Income> = incomeList.toList()
+    override suspend fun insertAll(incomes: List<Income>) {}
+    override suspend fun clearAll() {}
 }

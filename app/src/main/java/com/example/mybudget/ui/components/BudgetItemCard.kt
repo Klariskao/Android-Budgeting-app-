@@ -16,13 +16,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.mybudget.data.local.SettingsDataStore
+import com.example.mybudget.data.local.SettingsDataStoreImpl
 import com.example.mybudget.ui.helpers.formatCurrency
 import org.koin.compose.getKoin
 
 @Composable
 fun BudgetItemCard(title: String, amount: Double, subtitle: String) {
-    val settingsDataStore: SettingsDataStore = getKoin().get()
+    val settingsDataStore: SettingsDataStoreImpl = getKoin().get()
     val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
     Card(
         modifier = Modifier

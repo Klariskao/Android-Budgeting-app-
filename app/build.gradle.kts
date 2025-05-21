@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("kotlin-kapt")
+    kotlin("plugin.serialization") version "1.9.23"
 }
 
 android {
@@ -100,4 +101,7 @@ dependencies {
 
     // Data store
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }

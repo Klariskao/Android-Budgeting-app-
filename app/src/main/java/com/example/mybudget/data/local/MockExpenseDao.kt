@@ -51,5 +51,7 @@ class MockExpenseDao : ExpenseDao {
 
     override suspend fun getAllExpenses(): List<Expense> = expenseList
     override fun getExpenseById(id: Long): Flow<Expense> = flowOf(expenseList.first())
+    override suspend fun insertAll(expenses: List<Expense>) {}
+    override suspend fun clearAll() {}
     override suspend fun updateExpense(expense: Expense) {}
 }

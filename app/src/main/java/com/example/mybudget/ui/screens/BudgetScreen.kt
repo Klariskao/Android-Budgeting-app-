@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Delete
@@ -37,6 +36,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -51,7 +51,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -79,7 +78,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
+import com.example.mybudget.data.local.MockSettingsDataStore
 import com.example.mybudget.data.local.SettingsDataStore
+import com.example.mybudget.data.local.SettingsDataStoreImpl
 import com.example.mybudget.data.model.Budget
 import com.example.mybudget.data.model.Expense
 import com.example.mybudget.data.model.ExpenseCategory
@@ -111,6 +112,7 @@ import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.getKoin
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -119,17 +121,8 @@ import java.time.format.DateTimeFormatter
 fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
     val budget by viewModel.budget.collectAsState()
     val dialogState = viewModel.dialogState
-    var sortOption by remember { mutableStateOf(ExpensesSortOption.NONE) }
-    var selectedExpensePriorities by remember { mutableStateOf(setOf<ExpensePriority>()) }
-
-    val graphColors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.error,
-        MaterialTheme.colorScheme.surfaceVariant,
-        MaterialTheme.colorScheme.outline,
-    )
+    val settingsDataStore: SettingsDataStoreImpl = getKoin().get()
+    val sharedBudgetViewModel: SharedBudgetViewModel = koinViewModel()
 
     dialogState?.let { state ->
         when (state) {
@@ -172,155 +165,192 @@ fun BudgetScreen(viewModel: BudgetViewModel, navController: NavController) {
     }
 
     Scaffold { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            item {
-                BudgetSummaryCard(budget, navController)
-            }
+        BudgetScreenContent(
+            viewModel,
+            sharedBudgetViewModel,
+            budget,
+            navController,
+            settingsDataStore,
+            Modifier.padding(padding),
+        )
+    }
+}
 
+@Composable
+fun BudgetScreenContent(
+    viewModel: BudgetViewModel,
+    sharedBudgetViewModel: SharedBudgetViewModel,
+    budget: Budget,
+    navController: NavController,
+    settingsDataStore: SettingsDataStore,
+    modifier: Modifier = Modifier,
+) {
+    var sortOption by remember { mutableStateOf(ExpensesSortOption.NONE) }
+    var selectedExpensePriorities by remember { mutableStateOf(setOf<ExpensePriority>()) }
+
+    val graphColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.error,
+        MaterialTheme.colorScheme.surfaceVariant,
+        MaterialTheme.colorScheme.outline,
+    )
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item {
+            BudgetSummaryCard(sharedBudgetViewModel, settingsDataStore, budget, navController)
+        }
+
+        item {
+            IncomeHeader(
+                onAddIncome = { navController.navigate("income") },
+            )
+        }
+
+        if (budget.incomes.isEmpty()) {
             item {
-                IncomeHeader(
-                    onAddIncome = { navController.navigate("income") },
+                Text(
+                    "No incomes added yet.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+        } else {
+            items(
+                items = budget.incomes,
+                key = { "income-${it.id}" },
+            ) { income ->
+                SwipeableIncomeExpenseItem(
+                    title = income.name,
+                    amount = income.amount,
+                    subtitle = income.frequency.label,
+                    icon = Icons.Filled.AttachMoney,
+                    color = Color(0xFF388E3C),
+                    onDelete = {
+                        viewModel.onEvent(BudgetEvent.ConfirmRemoveIncome(income))
+                    },
+                    onEdit = {
+                        viewModel.onEvent(BudgetEvent.EditIncome(income))
+                    },
+                    onClick = {},
+                )
+            }
+        }
+
+        item {
+            Spacer(Modifier.height(12.dp))
+            ExpenseHeader(
+                onAddExpense = { navController.navigate("expense") },
+            )
+        }
+
+        if (budget.expenses.isEmpty()) {
+            item {
+                Text("No expenses added yet.", style = MaterialTheme.typography.bodyMedium)
+            }
+        } else {
+            val sortedExpenses = viewModel.sortExpenses(budget.expenses, sortOption)
+            val filteredExpenses = sortedExpenses.filter {
+                selectedExpensePriorities.isEmpty() ||
+                    selectedExpensePriorities.contains(it.priority)
+            }
+            val totalSpent = filteredExpenses.sumOf { it.amount }
+            val grouped = filteredExpenses.groupBy { it.category }
+
+            val segments = grouped.entries.mapIndexed { index, (_, expenses) ->
+                val categoryTotal = expenses.sumOf { it.amount }
+                ProgressSegment(
+                    fraction = (categoryTotal / totalSpent).toFloat(),
+                    color = graphColors[index % graphColors.size],
                 )
             }
 
-            if (budget.incomes.isEmpty()) {
-                item {
-                    Text("No incomes added yet.", style = MaterialTheme.typography.bodyMedium)
-                }
-            } else {
-                items(
-                    items = budget.incomes,
-                    key = { "income-${it.id}" },
-                ) { income ->
-                    SwipeableIncomeExpenseItem(
-                        title = income.name,
-                        amount = income.amount,
-                        subtitle = income.frequency.label,
-                        icon = Icons.Filled.AttachMoney,
-                        color = Color(0xFF388E3C),
-                        onDelete = {
-                            viewModel.onEvent(
-                                BudgetEvent.ConfirmRemoveIncome(income),
-                            )
-                        },
-                        onEdit = {
-                            viewModel.onEvent(
-                                BudgetEvent.EditIncome(income),
-                            )
-                        },
-                        onClick = {},
-                    )
-                }
-            }
-
             item {
+                SortFilterBar(
+                    selectedSort = sortOption,
+                    selectedExpensePriorities = selectedExpensePriorities,
+                    onSortChange = { sortOption = it },
+                    onFilterChange = { type ->
+                        selectedExpensePriorities = if (type in selectedExpensePriorities) {
+                            selectedExpensePriorities - type
+                        } else {
+                            selectedExpensePriorities + type
+                        }
+                    },
+                )
+
                 Spacer(Modifier.height(12.dp))
-                ExpenseHeader(
-                    onAddExpense = { navController.navigate("expense") },
+
+                ExpensePieChart(
+                    data = filteredExpenses.map { it.category.label to it.amount.toFloat() },
+                    pieColors = graphColors,
+                )
+            }
+            items(
+                items = filteredExpenses,
+                key = { "expense-${it.id}" },
+            ) { expense ->
+                SwipeableIncomeExpenseItem(
+                    title = expense.name,
+                    amount = expense.amount,
+                    subtitle = "${expense.frequency.label}, ${expense.priority.label}, ${expense.category.label}",
+                    icon = Icons.Filled.MoneyOff,
+                    color = Color(0xFFD32F2F),
+                    onDelete = {
+                        viewModel.onEvent(
+                            BudgetEvent.ConfirmRemoveExpense(expense),
+                        )
+                    },
+                    onEdit = {
+                        viewModel.onEvent(
+                            BudgetEvent.EditExpense(expense),
+                        )
+                    },
+                    onClick = {
+                        navController.navigate(Screen.ExpenseDetail.createRoute(expense.id))
+                    },
                 )
             }
 
-            if (budget.expenses.isEmpty()) {
-                item {
-                    Text("No expenses added yet.", style = MaterialTheme.typography.bodyMedium)
-                }
-            } else {
-                val sortedExpenses = viewModel.sortExpenses(budget.expenses, sortOption)
-                val filteredExpenses =
-                    sortedExpenses.filter {
-                        selectedExpensePriorities.isEmpty() ||
-                            selectedExpensePriorities.contains(it.priority)
-                    }
-                val totalSpent = filteredExpenses.sumOf { it.amount }
-                val grouped = filteredExpenses.groupBy { it.category }
+            item {
+                MultiSegmentLinearProgressBar(
+                    segments = segments,
+                    filteredExpenses = filteredExpenses,
+                    modifier = Modifier.fillMaxWidth(),
+                )
 
-                val segments = grouped.entries.mapIndexed { index, (_, expenses) ->
-                    val categoryTotal = expenses.sumOf { it.amount }
-                    ProgressSegment(
-                        fraction = (categoryTotal / totalSpent).toFloat(),
-                        color = graphColors[index % graphColors.size],
-                    )
-                }
-
-                item {
-                    SortFilterBar(
-                        selectedSort = sortOption,
-                        selectedExpensePriorities = selectedExpensePriorities,
-                        onSortChange = { sortOption = it },
-                        onFilterChange = { type ->
-                            selectedExpensePriorities =
-                                if (type in selectedExpensePriorities) {
-                                    selectedExpensePriorities - type
-                                } else {
-                                    selectedExpensePriorities + type
-                                }
-                        },
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    ExpensePieChart(
-                        data = filteredExpenses.map { it.category.label to it.amount.toFloat() },
-                        pieColors = graphColors,
-                    )
-                }
-                items(
-                    items = filteredExpenses,
-                    key = { "expense-${it.id}" },
-                ) { expense ->
-                    SwipeableIncomeExpenseItem(
-                        title = expense.name,
-                        amount = expense.amount,
-                        subtitle = "${expense.frequency.label}, ${expense.priority.label}, ${expense.category.label}",
-                        icon = Icons.Filled.MoneyOff,
-                        color = Color(0xFFD32F2F),
-                        onDelete = {
-                            viewModel.onEvent(
-                                BudgetEvent.ConfirmRemoveExpense(expense),
-                            )
-                        },
-                        onEdit = {
-                            viewModel.onEvent(
-                                BudgetEvent.EditExpense(expense),
-                            )
-                        },
-                        onClick = {
-                            navController.navigate(Screen.ExpenseDetail.createRoute(expense.id))
-                        },
-                    )
-                }
-
-                item {
-                    MultiSegmentLinearProgressBar(
-                        segments = segments,
-                        filteredExpenses = filteredExpenses,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    BudgetPeriodOverview(incomes = budget.incomes, expenses = filteredExpenses)
-                }
+                BudgetPeriodOverview(
+                    settingsDataStore = settingsDataStore,
+                    incomes = budget.incomes,
+                    expenses = filteredExpenses,
+                )
             }
         }
     }
 }
 
 @Composable
-fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Modifier = Modifier) {
+fun BudgetSummaryCard(
+    sharedBudgetViewModel: SharedBudgetViewModel,
+    settingsDataStore: SettingsDataStore,
+    budget: Budget,
+    navController: NavController,
+    modifier: Modifier = Modifier,
+) {
     val monthlyIncome = budget.incomes.sumOf { it.toMonthlyAmount() }
     val yearlyIncome =
         budget.incomes.sumOf { it.toYearlyAmount(customFrequencyInDays = it.customFrequencyInDays) }
 
     val monthlyExpenses = budget.expenses.sumOf { it.toMonthlyAmount() }
-    val yearlyExpenses =
-        budget.expenses.sumOf {
-            it.toYearlyAmount(customFrequencyInDays = it.customFrequencyInDays)
-        }
+    val yearlyExpenses = budget.expenses.sumOf {
+        it.toYearlyAmount(customFrequencyInDays = it.customFrequencyInDays)
+    }
 
     val availableYearlyFunds = yearlyIncome - yearlyExpenses
     val availableMonthlyFunds = monthlyIncome - monthlyExpenses
@@ -328,7 +358,7 @@ fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Mo
     val progress = if (yearlyIncome > 0) {
         (yearlyExpenses / yearlyIncome).toFloat().coerceIn(0f, 1f)
     } else {
-        0f
+        yearlyExpenses.toFloat().coerceIn(0f, 1f)
     }
 
     Card(
@@ -349,7 +379,11 @@ fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Mo
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("Total Budget Summary", style = MaterialTheme.typography.titleMedium)
-                ExportButton(budget = budget, navController = navController)
+                SettingsButton(
+                    sharedBudgetViewModel = sharedBudgetViewModel,
+                    budget = budget,
+                    navController = navController,
+                )
             }
 
             Spacer(Modifier.height(12.dp))
@@ -360,9 +394,9 @@ fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Mo
                 fontWeight = FontWeight.SemiBold,
             )
 
-            SummaryRow("Total Income", yearlyIncome)
-            SummaryRow("Total Expenses", yearlyExpenses)
-            SummaryRow("Available Funds", availableYearlyFunds)
+            SummaryRow(settingsDataStore, "Total Income", yearlyIncome)
+            SummaryRow(settingsDataStore, "Total Expenses", yearlyExpenses)
+            SummaryRow(settingsDataStore, "Available Funds", availableYearlyFunds)
 
             Spacer(Modifier.height(12.dp))
 
@@ -387,33 +421,34 @@ fun BudgetSummaryCard(budget: Budget, navController: NavController, modifier: Mo
                 fontWeight = FontWeight.SemiBold,
             )
 
-            SummaryRow("Average Income", monthlyIncome)
-            SummaryRow("Average Expenses", monthlyExpenses)
-            SummaryRow("Available Funds", availableMonthlyFunds)
+            SummaryRow(settingsDataStore, "Average Income", monthlyIncome)
+            SummaryRow(settingsDataStore, "Average Expenses", monthlyExpenses)
+            SummaryRow(settingsDataStore, "Available Funds", availableMonthlyFunds)
         }
     }
 }
 
 @Composable
-fun ExportButton(budget: Budget, navController: NavController) {
-    val sharedBudgetViewModel: SharedBudgetViewModel = getKoin().get()
-    LaunchedEffect(budget) {
-        sharedBudgetViewModel.setBudget(budget)
-    }
+fun SettingsButton(
+    sharedBudgetViewModel: SharedBudgetViewModel,
+    budget: Budget,
+    navController: NavController,
+) {
     IconButton(
-        onClick = { navController.navigate(Screen.Settings.route) },
+        onClick = {
+            sharedBudgetViewModel.setBudget(budget)
+            navController.navigate(Screen.Settings.route)
+        },
     ) {
         Icon(Icons.Default.Settings, contentDescription = "Settings")
     }
 }
 
 @Composable
-fun SummaryRow(label: String, amount: Double) {
-    val settingsDataStore: SettingsDataStore = getKoin().get()
+fun SummaryRow(settingsDataStore: SettingsDataStore, label: String, amount: Double) {
     val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
     Row(
-        modifier =
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -426,14 +461,17 @@ fun SummaryRow(label: String, amount: Double) {
 @Composable
 fun IncomeHeader(onAddIncome: () -> Unit) {
     Row(
-        modifier =
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("Incomes", style = MaterialTheme.typography.titleLarge)
+        Text(
+            "Incomes",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
         TextButton(
             onClick = onAddIncome,
             shape = RoundedCornerShape(12.dp),
@@ -454,20 +492,22 @@ fun IncomeHeader(onAddIncome: () -> Unit) {
 @Composable
 fun ExpenseHeader(onAddExpense: () -> Unit) {
     Row(
-        modifier =
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("Expenses", style = MaterialTheme.typography.titleLarge)
+        Text(
+            "Expenses",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
         TextButton(
             onClick = onAddExpense,
             shape = RoundedCornerShape(12.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-            colors =
-            ButtonDefaults.outlinedButtonColors(
+            colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,
             ),
@@ -487,8 +527,7 @@ fun SortFilterBar(
     onFilterChange: (ExpensePriority) -> Unit,
 ) {
     Column(
-        modifier =
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp),
     ) {
@@ -497,7 +536,11 @@ fun SortFilterBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Sort by:", style = MaterialTheme.typography.labelLarge)
+            Text(
+                "Sort by:",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
 
             SortDropdown(
                 selectedSort = selectedSort,
@@ -510,7 +553,11 @@ fun SortFilterBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Filter by:", style = MaterialTheme.typography.labelLarge)
+            Text(
+                "Filter by:",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
             ExpenseTypeFilterBar(
                 selectedTypes = selectedExpensePriorities,
                 onPriorityToggle = { onFilterChange(it) },
@@ -554,8 +601,7 @@ fun ExpenseTypeFilterBar(
     modifier: Modifier = Modifier,
 ) {
     LazyRow(
-        modifier =
-        modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -582,8 +628,7 @@ fun ExpensePieChart(
     val holeColor = MaterialTheme.colorScheme.background.toArgb()
 
     AndroidView(
-        modifier =
-        modifier
+        modifier = modifier
             .height(300.dp)
             .fillMaxWidth(),
         factory = {
@@ -595,6 +640,7 @@ fun ExpensePieChart(
                 setEntryLabelColor(labelColor)
                 centerText = "Expenses"
                 setCenterTextSize(18f)
+                setCenterTextColor(labelColor)
                 legend.isEnabled = true
                 legend.textColor = labelColor
                 legend.form = Legend.LegendForm.CIRCLE
@@ -603,24 +649,21 @@ fun ExpensePieChart(
             }
         },
         update = { chart ->
-            val entries =
-                data.map { (label, value) ->
-                    PieEntry(value, label)
-                }
+            val entries = data.map { (label, value) ->
+                PieEntry(value, label)
+            }
 
-            val dataSet =
-                PieDataSet(entries, "").apply {
-                    colors = pieColors.map { it.toArgb() }
-                    sliceSpace = 3f
-                    selectionShift = 5f
-                }
+            val dataSet = PieDataSet(entries, "").apply {
+                colors = pieColors.map { it.toArgb() }
+                sliceSpace = 3f
+                selectionShift = 5f
+            }
 
-            chart.data =
-                PieData(dataSet).apply {
-                    setDrawValues(true)
-                    setValueTextSize(12f)
-                    setValueTextColor(labelColor)
-                }
+            chart.data = PieData(dataSet).apply {
+                setDrawValues(true)
+                setValueTextSize(12f)
+                setValueTextColor(labelColor)
+            }
 
             chart.invalidate()
         },
@@ -640,7 +683,7 @@ fun SwipeableIncomeExpenseItem(
     onClick: () -> Unit,
 ) {
     var itemHeight by remember { mutableIntStateOf(0) }
-    val settingsDataStore: SettingsDataStore = getKoin().get()
+    val settingsDataStore: SettingsDataStoreImpl = getKoin().get()
     val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -686,8 +729,7 @@ fun SwipeableIncomeExpenseItem(
 
             if (icon != null) {
                 Box(
-                    modifier =
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
                         .height(with(LocalDensity.current) { itemHeight.toDp() })
                         .padding(vertical = 4.dp)
@@ -698,9 +740,7 @@ fun SwipeableIncomeExpenseItem(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier =
-                        Modifier
-                            .padding(horizontal = 20.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp),
                     ) {
                         Icon(icon, contentDescription = label, tint = Color.Black)
                         Text(label, color = Color.Black, fontWeight = FontWeight.Bold)
@@ -710,8 +750,7 @@ fun SwipeableIncomeExpenseItem(
         },
         content = {
             Card(
-                modifier =
-                Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
                     .onGloballyPositioned { coordinates ->
@@ -721,8 +760,7 @@ fun SwipeableIncomeExpenseItem(
                 elevation = CardDefaults.cardElevation(2.dp),
             ) {
                 ListItem(
-                    modifier =
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
                         .background(color)
                         .clickable { onClick() },
@@ -802,7 +840,11 @@ fun MultiSegmentLinearProgressBar(
 }
 
 @Composable
-fun BudgetPeriodOverview(incomes: List<Income>, expenses: List<Expense>) {
+fun BudgetPeriodOverview(
+    settingsDataStore: SettingsDataStore,
+    incomes: List<Income>,
+    expenses: List<Expense>,
+) {
     val currentMonth = YearMonth.now()
     val months = remember {
         (0..11).map { currentMonth.plusMonths(it.toLong()) }
@@ -852,7 +894,7 @@ fun BudgetPeriodOverview(incomes: List<Income>, expenses: List<Expense>) {
                             },
                         )
                     }
-                    Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                     DropdownMenuItem(
                         text = { Text("Full Year") },
                         onClick = {
@@ -874,9 +916,9 @@ fun BudgetPeriodOverview(incomes: List<Income>, expenses: List<Expense>) {
             ),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                SummaryRow("Total Income", totalIncome)
-                SummaryRow("Total Expenses", totalExpenses)
-                SummaryRow("Available Funds", availableFunds)
+                SummaryRow(settingsDataStore, "Total Income", totalIncome)
+                SummaryRow(settingsDataStore, "Total Expenses", totalExpenses)
+                SummaryRow(settingsDataStore, "Available Funds", availableFunds)
 
                 Spacer(Modifier.height(8.dp))
 
@@ -907,19 +949,45 @@ val customGreen: Color
     @Composable
     get() = if (isSystemInDarkTheme()) Green80 else Green40
 
+val mockExpenses = listOf(
+    Expense(
+        name = "Rent",
+        amount = 1000.0,
+        priority = ExpensePriority.REQUIRED,
+        frequency = ExpenseFrequency.MONTHLY,
+        category = ExpenseCategory.HOME,
+    ),
+    Expense(
+        name = "Food",
+        amount = 300.0,
+        priority = ExpensePriority.REQUIRED,
+        frequency = ExpenseFrequency.WEEKLY,
+        category = ExpenseCategory.FOOD,
+    ),
+    Expense(
+        name = "Transport",
+        amount = 50.0,
+        priority = ExpensePriority.LUXURY,
+        frequency = ExpenseFrequency.ONE_TIME,
+        category = ExpenseCategory.ENTERTAINMENT,
+    ),
+)
+
 @Preview(showBackground = true)
 @Composable
 fun BudgetScreenPreview() {
     MaterialTheme {
-        BudgetScreen(
-            viewModel =
-            BudgetViewModel(
+        BudgetScreenContent(
+            viewModel = BudgetViewModel(
                 BudgetRepositoryImpl(
                     MockExpenseDao(),
                     MockIncomeDao(),
                 ),
             ),
+            sharedBudgetViewModel = SharedBudgetViewModel(),
+            budget = Budget(incomes = emptyList(), expenses = mockExpenses),
             navController = rememberNavController(),
+            settingsDataStore = MockSettingsDataStore(),
         )
     }
 }
@@ -928,15 +996,17 @@ fun BudgetScreenPreview() {
 @Composable
 fun BudgetScreenPreviewDark() {
     MyBudgetTheme(isDarkTheme = true) {
-        BudgetScreen(
-            viewModel =
-            BudgetViewModel(
+        BudgetScreenContent(
+            viewModel = BudgetViewModel(
                 BudgetRepositoryImpl(
                     MockExpenseDao(),
                     MockIncomeDao(),
                 ),
             ),
+            sharedBudgetViewModel = SharedBudgetViewModel(),
+            budget = Budget(incomes = emptyList(), expenses = mockExpenses),
             navController = rememberNavController(),
+            settingsDataStore = MockSettingsDataStore(),
         )
     }
 }
@@ -969,30 +1039,6 @@ fun ExpensePieChartPreview() {
     }
 }
 
-val mockExpenses = listOf(
-    Expense(
-        name = "Rent",
-        amount = 1000.0,
-        priority = ExpensePriority.REQUIRED,
-        frequency = ExpenseFrequency.MONTHLY,
-        category = ExpenseCategory.HOME,
-    ),
-    Expense(
-        name = "Food",
-        amount = 300.0,
-        priority = ExpensePriority.REQUIRED,
-        frequency = ExpenseFrequency.WEEKLY,
-        category = ExpenseCategory.FOOD,
-    ),
-    Expense(
-        name = "Transport",
-        amount = 50.0,
-        priority = ExpensePriority.LUXURY,
-        frequency = ExpenseFrequency.ONE_TIME,
-        category = ExpenseCategory.ENTERTAINMENT,
-    ),
-)
-
 val total = mockExpenses.sumOf { it.amount }
 
 val grouped = mockExpenses.groupBy { it.category }
@@ -1022,6 +1068,7 @@ fun MultiSegmentLinearProgressBarPreview() {
 fun BudgetPeriodOverviewPreview() {
     MaterialTheme {
         BudgetPeriodOverview(
+            settingsDataStore = MockSettingsDataStore(),
             incomes = listOf(
                 Income(
                     name = "Job",
