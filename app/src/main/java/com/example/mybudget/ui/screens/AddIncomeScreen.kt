@@ -62,10 +62,9 @@ fun AddIncomeScreen(viewModel: AddIncomeViewModel, navController: NavController)
     var customFrequencyInDays by remember { mutableStateOf("") }
     val showCustomFrequency = frequency == IncomeFrequency.CUSTOM
 
-    val datePickerState =
-        rememberDatePickerState(
-            initialSelectedDateMillis = firstPaymentDate.toEpochDay() * 86400000,
-        )
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = firstPaymentDate.toEpochDay() * 86400000,
+    )
     val datePickerShown = remember { mutableStateOf(false) }
 
     if (datePickerShown.value) {
@@ -163,9 +162,11 @@ fun AddIncomeScreen(viewModel: AddIncomeViewModel, navController: NavController)
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                "First Payment Date: ${firstPaymentDate.format(
-                    DateTimeFormatter.ofPattern("MMM dd, yyyy"),
-                )}",
+                "First Payment Date: ${
+                    firstPaymentDate.format(
+                        DateTimeFormatter.ofPattern("MMM dd, yyyy"),
+                    )
+                }",
             )
         }
 

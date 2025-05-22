@@ -33,10 +33,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.mybudget.data.local.MockExpenseDao
 import com.example.mybudget.data.local.MockIncomeDao
+import com.example.mybudget.data.local.SettingsDataStoreImpl
+import com.example.mybudget.data.model.Expense
+import com.example.mybudget.data.model.ExpenseCategory
 import com.example.mybudget.data.model.ExpenseFrequency
+import com.example.mybudget.data.model.ExpensePriority
 import com.example.mybudget.repository.BudgetRepositoryImpl
 import com.example.mybudget.ui.ExpenseDetailViewModel
 import com.example.mybudget.ui.dialogs.DeleteConfirmationDialog
@@ -46,13 +49,13 @@ import com.example.mybudget.ui.helpers.formatCurrency
 import com.example.mybudget.ui.model.ExpenseDetailEvent
 import com.example.mybudget.ui.theme.MyBudgetTheme
 import kotlinx.coroutines.flow.collectLatest
+import org.koin.compose.getKoin
 
 @Composable
 fun ExpenseDetailScreen(viewModel: ExpenseDetailViewModel, navController: NavController) {
+    val settingsDataStore: SettingsDataStoreImpl = getKoin().get()
     val expense by viewModel.expenseFlow.collectAsState(initial = null)
-
-    var showEditDialog by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
 
     LaunchedEffect(Unit) {
         viewModel.navigateBack.collectLatest {
@@ -61,117 +64,132 @@ fun ExpenseDetailScreen(viewModel: ExpenseDetailViewModel, navController: NavCon
     }
 
     expense?.let { safeExpense ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            Text(
-                text = safeExpense.name,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    InfoRow(label = "Amount", value = formatCurrency(safeExpense.amount, ""))
-                    InfoRow(label = "Category", value = safeExpense.category.label)
-                    InfoRow(label = "Priority", value = safeExpense.priority.label)
-                    InfoRow(label = "Frequency", value = safeExpense.frequency.label)
-                    if (safeExpense.frequency == ExpenseFrequency.CUSTOM &&
-                        safeExpense.customFrequencyInDays != null
-                    ) {
-                        InfoRow(
-                            label = "Custom Frequency",
-                            value = "${safeExpense.customFrequencyInDays} days",
-                        )
-                    }
-                    InfoRow(label = "Purchase Date", value = safeExpense.purchaseDate.toString())
-                    val nextPurchaseDate = calculateNextPurchaseDate(
-                        safeExpense.purchaseDate,
-                        safeExpense.frequency,
-                        safeExpense.customFrequencyInDays,
-                        safeExpense.repetitions,
-                        safeExpense.endDate,
-                    )
-                    if (nextPurchaseDate != null) {
-                        InfoRow(
-                            label = "Next Purchase",
-                            value = nextPurchaseDate.toString()
-                        )
-                    }
-                        if (safeExpense.brand.isNotBlank()) {
-                        InfoRow(label = "Brand", value = safeExpense.brand)
-                    }
-                    if (safeExpense.provider.isNotBlank()) {
-                        InfoRow(label = "Provider", value = safeExpense.provider)
-                    }
-                    if (safeExpense.linkToPurchase.isNotBlank()) {
-                        InfoRow(label = "Purchase Link", value = safeExpense.linkToPurchase)
-                    }
-                    if (!safeExpense.note.isNullOrBlank()) {
-                        InfoRow(label = "Note", value = safeExpense.note ?: "")
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Edit / Delete Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                OutlinedButton(onClick = { showEditDialog = true }) {
-                    Text("Edit")
-                }
-                OutlinedButton(
-                    onClick = { showDeleteDialog = true },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) {
-                    Text("Delete")
-                }
-            }
-        }
-
-        // Edit Dialog
-        if (showEditDialog) {
-            EditExpenseDialog(
-                expense = safeExpense,
-                onDismiss = { showEditDialog = false },
-                onSave = {
-                    viewModel.onEvent(ExpenseDetailEvent.UpdateExpense(it))
-                    showEditDialog = false
-                },
-            )
-        }
-
-        // Delete Confirmation Dialog
-        if (showDeleteDialog) {
-            DeleteConfirmationDialog(
-                name = safeExpense.name,
-                onConfirm = {
-                    viewModel.onEvent(ExpenseDetailEvent.RemoveExpense(safeExpense))
-                    showDeleteDialog = false
-                },
-                onDismiss = { showDeleteDialog = false },
-            )
-        }
+        ExpenseDetailScreenContent(
+            expense = safeExpense,
+            currency = currency,
+            viewModel = viewModel,
+        )
     } ?: CircularProgressIndicator()
+}
+
+@Composable
+fun ExpenseDetailScreenContent(
+    expense: Expense,
+    currency: String,
+    viewModel: ExpenseDetailViewModel,
+) {
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        Text(
+            text = expense.name,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                InfoRow(label = "Amount", value = formatCurrency(expense.amount, currency))
+                InfoRow(label = "Category", value = expense.category.label)
+                InfoRow(label = "Priority", value = expense.priority.label)
+                InfoRow(label = "Frequency", value = expense.frequency.label)
+                if (expense.frequency == ExpenseFrequency.CUSTOM &&
+                    expense.customFrequencyInDays != null
+                ) {
+                    InfoRow(
+                        label = "Custom Frequency",
+                        value = "${expense.customFrequencyInDays} days",
+                    )
+                }
+                InfoRow(label = "Purchase Date", value = expense.purchaseDate.toString())
+                val nextPurchaseDate = calculateNextPurchaseDate(
+                    expense.purchaseDate,
+                    expense.frequency,
+                    expense.customFrequencyInDays,
+                    expense.repetitions,
+                    expense.endDate,
+                )
+                if (nextPurchaseDate != null) {
+                    InfoRow(
+                        label = "Next Purchase",
+                        value = nextPurchaseDate.toString(),
+                    )
+                }
+                if (expense.brand.isNotBlank()) {
+                    InfoRow(label = "Brand", value = expense.brand)
+                }
+                if (expense.provider.isNotBlank()) {
+                    InfoRow(label = "Provider", value = expense.provider)
+                }
+                if (expense.linkToPurchase.isNotBlank()) {
+                    InfoRow(label = "Purchase Link", value = expense.linkToPurchase)
+                }
+                if (!expense.note.isNullOrBlank()) {
+                    InfoRow(label = "Note", value = expense.note)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Edit / Delete Buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            OutlinedButton(onClick = { showEditDialog = true }) {
+                Text("Edit")
+            }
+            OutlinedButton(
+                onClick = { showDeleteDialog = true },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text("Delete")
+            }
+        }
+    }
+    // Edit Dialog
+    if (showEditDialog) {
+        EditExpenseDialog(
+            expense = expense,
+            onDismiss = { showEditDialog = false },
+            onSave = {
+                viewModel.onEvent(ExpenseDetailEvent.UpdateExpense(it))
+                showEditDialog = false
+            },
+        )
+    }
+
+    // Delete Confirmation Dialog
+    if (showDeleteDialog) {
+        DeleteConfirmationDialog(
+            name = expense.name,
+            onConfirm = {
+                viewModel.onEvent(ExpenseDetailEvent.RemoveExpense(expense))
+                showDeleteDialog = false
+            },
+            onDismiss = { showDeleteDialog = false },
+        )
+    }
 }
 
 @Composable
@@ -194,20 +212,28 @@ fun InfoRow(label: String, value: String) {
     }
 }
 
+val mockExpense = Expense(
+    name = "Rent",
+    amount = 1000.0,
+    priority = ExpensePriority.REQUIRED,
+    frequency = ExpenseFrequency.MONTHLY,
+    category = ExpenseCategory.HOME,
+)
+
 @Preview(showBackground = true)
 @Composable
 fun ExpenseDetailScreenPreview() {
     MaterialTheme {
-        ExpenseDetailScreen(
-            viewModel =
-            ExpenseDetailViewModel(
+        ExpenseDetailScreenContent(
+            expense = mockExpense,
+            currency = "USD",
+            viewModel = ExpenseDetailViewModel(
                 savedStateHandle = SavedStateHandle(mapOf("expenseId" to 1L)),
                 repository = BudgetRepositoryImpl(
                     MockExpenseDao(),
                     MockIncomeDao(),
                 ),
             ),
-            navController = rememberNavController(),
         )
     }
 }
@@ -216,16 +242,16 @@ fun ExpenseDetailScreenPreview() {
 @Composable
 fun ExpenseDetailScreenPreviewDark() {
     MyBudgetTheme(isDarkTheme = true) {
-        ExpenseDetailScreen(
-            viewModel =
-            ExpenseDetailViewModel(
+        ExpenseDetailScreenContent(
+            expense = mockExpense,
+            currency = "USD",
+            viewModel = ExpenseDetailViewModel(
                 savedStateHandle = SavedStateHandle(mapOf("expenseId" to 1L)),
                 repository = BudgetRepositoryImpl(
                     MockExpenseDao(),
                     MockIncomeDao(),
                 ),
             ),
-            navController = rememberNavController(),
         )
     }
 }

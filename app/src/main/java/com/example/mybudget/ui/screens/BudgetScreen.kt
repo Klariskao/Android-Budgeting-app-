@@ -227,11 +227,11 @@ fun BudgetScreenContent(
                 key = { "income-${it.id}" },
             ) { income ->
                 SwipeableIncomeExpenseItem(
+                    settingsDataStore = settingsDataStore,
                     title = income.name,
                     amount = income.amount,
                     subtitle = income.frequency.label,
                     icon = Icons.Filled.AttachMoney,
-                    color = Color(0xFF388E3C),
                     onDelete = {
                         viewModel.onEvent(BudgetEvent.ConfirmRemoveIncome(income))
                     },
@@ -297,11 +297,11 @@ fun BudgetScreenContent(
                 key = { "expense-${it.id}" },
             ) { expense ->
                 SwipeableIncomeExpenseItem(
+                    settingsDataStore = settingsDataStore,
                     title = expense.name,
                     amount = expense.amount,
                     subtitle = "${expense.frequency.label}, ${expense.priority.label}, ${expense.category.label}",
                     icon = Icons.Filled.MoneyOff,
-                    color = Color(0xFFD32F2F),
                     onDelete = {
                         viewModel.onEvent(
                             BudgetEvent.ConfirmRemoveExpense(expense),
@@ -673,17 +673,16 @@ fun ExpensePieChart(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeableIncomeExpenseItem(
+    settingsDataStore: SettingsDataStore,
     title: String,
     subtitle: String,
     amount: Double,
     icon: ImageVector,
-    color: Color,
     onDelete: () -> Unit,
     onEdit: () -> Unit,
     onClick: () -> Unit,
 ) {
     var itemHeight by remember { mutableIntStateOf(0) }
-    val settingsDataStore: SettingsDataStoreImpl = getKoin().get()
     val currency by settingsDataStore.currencyFlow.collectAsState(initial = "USD")
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -762,7 +761,7 @@ fun SwipeableIncomeExpenseItem(
                 ListItem(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(color)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
                         .clickable { onClick() },
                     leadingContent = {
                         Icon(
@@ -777,7 +776,7 @@ fun SwipeableIncomeExpenseItem(
                         Text(
                             formatCurrency(amount, currency),
                             fontWeight = FontWeight.Medium,
-                            color = Color.DarkGray,
+                            color = MaterialTheme.colorScheme.secondary,
                         )
                     },
                 )
@@ -1007,6 +1006,40 @@ fun BudgetScreenPreviewDark() {
             budget = Budget(incomes = emptyList(), expenses = mockExpenses),
             navController = rememberNavController(),
             settingsDataStore = MockSettingsDataStore(),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SwipeableIncomeExpenseItemPreview() {
+    MaterialTheme {
+        SwipeableIncomeExpenseItem(
+            settingsDataStore = MockSettingsDataStore(),
+            title = "Job",
+            subtitle = "Monthly",
+            amount = 1500.0,
+            icon = Icons.Filled.AttachMoney,
+            onDelete = {},
+            onEdit = {},
+            onClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun SwipeableIncomeExpenseItemPreviewDark() {
+    MyBudgetTheme(isDarkTheme = true) {
+        SwipeableIncomeExpenseItem(
+            settingsDataStore = MockSettingsDataStore(),
+            title = "Job",
+            subtitle = "Monthly",
+            amount = 1500.0,
+            icon = Icons.Filled.AttachMoney,
+            onDelete = {},
+            onEdit = {},
+            onClick = {},
         )
     }
 }
